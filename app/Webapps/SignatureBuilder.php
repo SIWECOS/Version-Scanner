@@ -41,7 +41,7 @@ class SignatureBuilder
 
         // Directory exclusion
         if (count($this->config['ignoredFolders'])) {
-            $finder->exclude($this->config['ignoredFolders']);
+            $finder->notPath($this->config['ignoredFolders']);
         }
 
         // Filename exclusion

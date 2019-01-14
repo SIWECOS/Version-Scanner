@@ -50,6 +50,11 @@ class UpdateDatabase extends Command
         $this->info('');
         $this->info('Reading Signature Database');
 
+        // Create signature db file
+        if (!file_exists(storage_path('signatures.json'))) {
+            file_put_contents(storage_path('signatures.json'), json_encode([], JSON_PRETTY_PRINT));
+        }
+
         $signatures = json_decode(file_get_contents(storage_path('signatures.json')), true);
 
         $this->info('Done!');
@@ -116,23 +121,29 @@ class UpdateDatabase extends Command
                 switch (pathinfo($package["filename"], PATHINFO_EXTENSION)) {
                     case "bz2":
                         exec(
-                            "cd " . storage_path('app/' . $versionPath)
-                            . "; tar xfvj " . storage_path('app/' . $versionPath . '/' . $package["filename"])
+                            "cd " . escapeshellarg(storage_path('app/' . $versionPath))
+                            . "; tar xfvj " . escapeshellarg(
+                                storage_path('app/' . $versionPath . '/' . $package["filename"])
+                            )
                         );
                         break;
 
                     case "zip":
                         exec(
-                            "cd " . storage_path('app/' . $versionPath)
-                            . "; unzip " . storage_path('app/' . $versionPath . '/' . $package["filename"])
+                            "cd " . escapeshellarg(storage_path('app/' . $versionPath))
+                            . "; unzip -o " . escapeshellarg(
+                                storage_path('app/' . $versionPath . '/' . $package["filename"])
+                            )
                         );
                         break;
 
                     case "tgz":
                     case "gz":
                         exec(
-                            "cd " . storage_path('app/' . $versionPath)
-                            . "; tar xfz " . storage_path('app/' . $versionPath . '/' . $package["filename"])
+                            "cd " . escapeshellarg(storage_path('app/' . $versionPath))
+                            . "; tar xfz " . escapeshellarg(
+                                storage_path('app/' . $versionPath . '/' . $package["filename"])
+                            )
                             . " --strip 1"
                         );
                         break;
@@ -161,21 +172,21 @@ class UpdateDatabase extends Command
                 }
 
                 // Remove version folder
-                exec("rm -Rf " . storage_path('app/' . $versionPath));
+                exec("rm -Rf " . escapeshellarg(storage_path('app/' . $versionPath)));
 
                 // Append new version to array
                 $signatures[$appName]["versions"][] = $version;
+
+                // Sort version list
+                uksort($signatures[$appName]["versions"], 'version_compare');
+
+                // Save signature file
+                $this->info('Saving updated signature file');
+                file_put_contents(storage_path('signatures.json'), json_encode($signatures, JSON_PRETTY_PRINT));
+
+                $this->info('');
             }
-
-            // Sort version list
-            uksort($signatures[$appName]["versions"], 'version_compare');
-
-            $this->info('');
-            $this->info('');
         }
-
-        $this->info('Saving updated signature file');
-        file_put_contents(storage_path('signatures.json'), json_encode($signatures, JSON_PRETTY_PRINT));
 
         $this->info('');
         $this->info('');

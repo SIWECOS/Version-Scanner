@@ -7,6 +7,13 @@ use GuzzleHttp\Exception\ClientException;
 
 class Typo3 extends Releases
 {
+    const IGNORES = [
+        "4.5.33",
+        "4.6.0",
+        "4.6.0beta3",
+        "4.6.0alpha1"
+    ];
+
     /**
      * Get latest version
      *
@@ -69,6 +76,10 @@ class Typo3 extends Releases
             }
 
             foreach ($branch["releases"] as $version => $versionData) {
+                if (in_array($version, self::IGNORES)) {
+                    continue;
+                }
+
                 $packages[$version] = [
                     "url" => $versionData["url"]["tar"],
                     "filename" => $version . ".tgz"
