@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
-
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -13,3 +11,6 @@ use Illuminate\Http\Request;
 |
 */
 
+Route::group(['prefix' => 'v1'], function () {
+    Route::post('/version', 'ApiController@versionReport');
+});
