@@ -6,7 +6,6 @@ use GuzzleHttp\Exception\RequestException;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 use GuzzleHttp\Client;
-use GuzzleHttp\Psr7;
 
 class ScanWebsite extends Command
 {
@@ -37,9 +36,9 @@ class ScanWebsite extends Command
     /**
      * Execute the console command.
      *
-     * @return mixed
+     * @return void
      */
-    public function handle()
+    public function handle(): void
     {
         $this->info('=== Scanning the website. This could take a few seconds. ===');
 
@@ -49,7 +48,7 @@ class ScanWebsite extends Command
         {
             $this->info('=== Scan interrupted. No candidates found. ===');
 
-            return false;
+            return;
         }
 
         $candidatesFile = $this->retrieveFile('candidates.json');
@@ -58,7 +57,7 @@ class ScanWebsite extends Command
         {
             $this->info('=== Scan interrupted. Retrieving candidates failed. ===');
 
-            return false;
+            return;
         }
 
         $candidates = json_decode($candidatesFile, true);
@@ -67,62 +66,87 @@ class ScanWebsite extends Command
         {
             $this->info('=== Scan interrupted. Could not read candidates. ===');
 
-            return false;
+            return;
         }
 
         $httpClient = new Client;
-        $i = 0;
-        $j = 0;
-        $actualCms = '';
-        $tempCms = '';
 
-        foreach($candidates as $cms => $cmsData) {
-            $bestCandidates = $this->limitCandidates($cmsData, 15);
+        $detectedCms = $this->detectCms($candidates, $httpClient);
+        //$detectedCms = 'Joomla';
 
-            foreach($bestCandidates as $filename => $hashInfo) {
-                // Remove first appearance of the slash
-                $readableUrl = preg_replace('/^\//', '', $filename);
+        $version = $this->scan($candidates, $detectedCms, $httpClient);
 
-                try {
-                    $this->info('=== Scanning for CMS: '. $cms .' ===');
+        echo $version;
+    }
 
-                    $httpClient->get('https://www.a7layouts.de/' . $readableUrl);
+    public function scan($candidates, $cms, $httpClient)
+    {
+        $version = '';
+        $temp = [];
 
-                    // Algorithm to find out which CMS is used by the users website
-                    if ($tempCms === '')
+        foreach($candidates[$cms]['identifier'] as $filename => $hashInfo) {
+            $sourceHash = $hashInfo['data'];
+            $readableUrl = preg_replace('/^\//', '', $filename);
+
+            try {
+                $response = $httpClient->get('https://www.eco.de/' . $readableUrl);
+
+                $body = (string) $response->getBody();
+
+                $targetHash = md5($body);
+
+                if (isset($sourceHash[$targetHash]))
+                {
+                    $amountOfVersions = count($sourceHash[$targetHash]);
+
+                    // If there is only one version, no further searching required
+                    if ($amountOfVersions === 1)
                     {
-                        $tempCms = $cms;
-
-                        if (!$actualCms)
-                        {
-                            $actualCms = $cms;
-                        }
-
-                        $i++;
-                    } else if ($tempCms === $cms) {
-                        $i++;
-                    } else if ($tempCms !== $cms) {
-                        $j++;
-
-                        if ($j > $i)
-                        {
-                            $tempCms = '';
-                            $actualCms = $cms;
-                            $i = 0;
-                        }
+                        return $sourceHash[$targetHash][0];
                     }
 
-                } catch (RequestException $e) {
-                    $this->info('=== File not found: '. $readableUrl .' ===');
+                    // Unable to detect which version because this file occurrences in more than one version
+                    if ($amountOfVersions > 1 && !count($temp))
+                    {
+                        $temp = $sourceHash[$targetHash];
+                    }
 
-                    continue;
+                    if ($amountOfVersions > 1 && count($temp))
+                    {
+                        $occurrences = $this->occurrences($temp, $sourceHash[$targetHash]);
+
+                        if (count($occurrences) === 1)
+                        {
+                            $version = $occurrences[0];
+                        }
+                    }
+                }
+            } catch (RequestException $e) {
+                // $this->info('=== Scan interrupted. '. $e->getMessage() .' ===');
+            }
+        }
+
+        // After this foreach I have to check, if the version is still empty
+        // If so, I need a second foreach for versionproof
+
+        return $version;
+    }
+
+    public function occurrences($temp, $target): array
+    {
+        $occurrences = [];
+
+        foreach ($temp as $tValue) {
+            foreach ($target as $sValue)
+            {
+                if ($tValue === $sValue)
+                {
+                    $occurrences[] = [$tValue];
                 }
             }
         }
 
-        echo $actualCms;
-
-        return null;
+        return $occurrences;
     }
 
     private function fileExists(string $filename, string $disk): bool
@@ -135,8 +159,64 @@ class ScanWebsite extends Command
         return Storage::get($filename);
     }
 
-    public function limitCandidates ($candidates, $limit)
+    public function limitCandidates($candidates, $limit): array
     {
         return array_splice($candidates["identifier"], 0, $limit);
+    }
+
+    public function detectCms(array $candidates, $httpClient): string
+    {
+        $i = 0;
+        $j = 0;
+        $result = '';
+        $temp = '';
+
+        foreach($candidates as $cms => $cmsData) {
+            $bestCandidates = $this->limitCandidates($cmsData, 15);
+
+            foreach($bestCandidates as $filename => $hashInfo) {
+                // Remove first appearance of the slash
+                $readableUrl = preg_replace('/^\//', '', $filename);
+
+                //sleep(1);
+
+                try {
+                    $this->info('=== Scanning for CMS: '. $cms .' ===');
+
+                    $httpClient->get('https://www.eco.de/' . $readableUrl);
+
+                    // Algorithm to find out which CMS is used by the users website
+                    if ($temp === '')
+                    {
+                        $temp = $cms;
+
+                        if (!$result)
+                        {
+                            $result = $cms;
+                        }
+
+                        $i++;
+                    } else if ($temp === $cms) {
+                        $i++;
+                    } else if ($temp !== $cms) {
+                        $j++;
+
+                        if ($j > $i)
+                        {
+                            $temp = '';
+                            $result = $cms;
+                            $i = 0;
+                        }
+                    }
+
+                } catch (RequestException $e) {
+                    $this->info('=== File not found: '. $readableUrl .' ===');
+
+                    continue;
+                }
+            }
+        }
+
+        return $result;
     }
 }
