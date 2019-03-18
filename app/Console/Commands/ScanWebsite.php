@@ -14,7 +14,7 @@ class ScanWebsite extends Command
      *
      * @var string
      */
-    protected $signature = 'svs:version';
+    protected $signature = 'svs:version {--website=}';
 
     /**
      * The console command description.
@@ -71,15 +71,18 @@ class ScanWebsite extends Command
 
         $httpClient = new Client;
 
-        $detectedCms = $this->detectCms($candidates, $httpClient);
+        $website = $this->option('website');
+
+        $detectedCms = $this->detectCms($candidates, $httpClient, $website);
+
         //$detectedCms = 'Joomla';
 
-        $version = $this->scan($candidates, $detectedCms, $httpClient);
+        $version = $this->scan($candidates, $detectedCms, $httpClient, $website);
 
-        echo $version;
+        var_dump($version);
     }
 
-    public function scan($candidates, $cms, $httpClient)
+    public function scan($candidates, $cms, $httpClient, $website)
     {
         $version = '';
         $temp = [];
@@ -89,7 +92,7 @@ class ScanWebsite extends Command
             $readableUrl = preg_replace('/^\//', '', $filename);
 
             try {
-                $response = $httpClient->get('https://www.eco.de/' . $readableUrl);
+                $response = $httpClient->get($website . $readableUrl);
 
                 $body = (string) $response->getBody();
 
@@ -109,6 +112,8 @@ class ScanWebsite extends Command
                     if ($amountOfVersions > 1 && !count($temp))
                     {
                         $temp = $sourceHash[$targetHash];
+
+                        continue;
                     }
 
                     if ($amountOfVersions > 1 && count($temp))
@@ -117,12 +122,28 @@ class ScanWebsite extends Command
 
                         if (count($occurrences) === 1)
                         {
-                            $version = $occurrences[0];
+                            return $occurrences[0];
+                        }
+
+                        if (count($occurrences) > 1)
+                        {
+                            $temp = $occurrences;
                         }
                     }
                 }
             } catch (RequestException $e) {
                 // $this->info('=== Scan interrupted. '. $e->getMessage() .' ===');
+            }
+        }
+
+        if ($version === '')
+        {
+            foreach ($candidates[$cms]['versionproof'] as $versionNumber => $fileInfo) {
+                var_dump(temp);
+                if (in_array($versionNumber, $temp, true))
+                {
+                    echo $versionNumber;
+                }
             }
         }
 
@@ -164,7 +185,7 @@ class ScanWebsite extends Command
         return array_splice($candidates["identifier"], 0, $limit);
     }
 
-    public function detectCms(array $candidates, $httpClient): string
+    public function detectCms(array $candidates, $httpClient, $website): string
     {
         $i = 0;
         $j = 0;
@@ -183,7 +204,7 @@ class ScanWebsite extends Command
                 try {
                     $this->info('=== Scanning for CMS: '. $cms .' ===');
 
-                    $httpClient->get('https://www.eco.de/' . $readableUrl);
+                    $httpClient->get($website . $readableUrl);
 
                     // Algorithm to find out which CMS is used by the users website
                     if ($temp === '')
