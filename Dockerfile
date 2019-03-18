@@ -8,7 +8,7 @@ RUN apk --update add bash php7-mcrypt php7-ctype php7-xml php7-simplexml php7-xm
 COPY Caddyfile /etc/Caddyfile
 
 COPY . /scanner
-COPY .env.example /scanner/.env
+COPY .env /scanner/.env
 
 WORKDIR /scanner
 RUN composer install \
