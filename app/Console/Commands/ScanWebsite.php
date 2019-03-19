@@ -42,7 +42,7 @@ class ScanWebsite extends Command
     {
         $this->info('=== Scanning the website. This could take a few seconds. ===');
 
-        $hasCandidates = $this->fileExists('candidates.json', 'local');
+        $hasCandidates = Storage::disk('local')->exists('candidates.json');
 
         if (!$hasCandidates)
         {
@@ -51,16 +51,9 @@ class ScanWebsite extends Command
             return;
         }
 
-        $candidatesFile = $this->retrieveFile('candidates.json');
+        $contents = Storage::get('candidates.json');
 
-        if (!is_string($candidatesFile) || $candidatesFile === '')
-        {
-            $this->info('=== Scan interrupted. Retrieving candidates failed. ===');
-
-            return;
-        }
-
-        $candidates = json_decode($candidatesFile, true);
+        $candidates = json_decode($contents, true);
 
         if (!is_array($candidates) || !count($candidates))
         {
@@ -78,7 +71,7 @@ class ScanWebsite extends Command
         $version = $this->scan($candidates, $detectedCms, $httpClient, $website);
     }
 
-    public function scan($candidates, $cms, $httpClient, $website)
+    public function scan(array $candidates, string $cms, $httpClient, string $website): string
     {
         $possibleVersions = [];
 
@@ -119,14 +112,18 @@ class ScanWebsite extends Command
                 continue;
             }
 
+            // Get the intersection of the current hash tree and the one before
             $possibleVersions = array_intersect($possibleVersions, $sourceHashes[$targetHash]);
 
+            // Check again, if the intersection resulted in one entry. No further searching required then.
             if (count($possibleVersions) === 1)
             {
                 return $possibleVersions[0];
             }
         }
 
+        // If greater, the version has still not be found. Starting a more detailed and specific scan with -
+        // the last few versions left to check on.
         if (count($possibleVersions) > 1)
         {
             foreach ($candidates[$cms]['versionproof'] as $versionNumber => $fileInfo) {
@@ -138,22 +135,12 @@ class ScanWebsite extends Command
         }
     }
 
-    private function fileExists(string $filename, string $disk): bool
-    {
-        return Storage::disk($disk)->exists($filename);
-    }
-
-    private function retrieveFile(string $filename): string
-    {
-        return Storage::get($filename);
-    }
-
-    public function limitCandidates($candidates, $limit): array
+    public function limitCandidates(array $candidates, int $limit): array
     {
         return array_splice($candidates["identifier"], 0, $limit);
     }
 
-    public function detectCms(array $candidates, $httpClient, $website): string
+    public function detectCms(array $candidates, $httpClient, string $website): string
     {
         $highestCandidates = [];
 
