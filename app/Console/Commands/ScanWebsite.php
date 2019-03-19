@@ -75,6 +75,8 @@ class ScanWebsite extends Command
 
         $detectedCms = $this->detectCms($candidates, $httpClient, $website);
 
+        die();
+
         //$detectedCms = 'Joomla';
 
         $version = $this->scan($candidates, $detectedCms, $httpClient, $website);
@@ -109,26 +111,23 @@ class ScanWebsite extends Command
                     }
 
                     // Unable to detect which version because this file occurrences in more than one version
-                    if ($amountOfVersions > 1 && !count($temp))
+                    if (!count($temp))
                     {
                         $temp = $sourceHash[$targetHash];
 
                         continue;
                     }
 
-                    if ($amountOfVersions > 1 && count($temp))
+                    $occurrences = array_intersect($temp, $sourceHash[$targetHash]);
+
+                    if (count($occurrences) === 1)
                     {
-                        $occurrences = $this->occurrences($temp, $sourceHash[$targetHash]);
+                        return $occurrences[0];
+                    }
 
-                        if (count($occurrences) === 1)
-                        {
-                            return $occurrences[0];
-                        }
-
-                        if (count($occurrences) > 1)
-                        {
-                            $temp = $occurrences;
-                        }
+                    if (count($occurrences) > 1)
+                    {
+                        $temp = $occurrences;
                     }
                 }
             } catch (RequestException $e) {
@@ -139,7 +138,6 @@ class ScanWebsite extends Command
         if ($version === '')
         {
             foreach ($candidates[$cms]['versionproof'] as $versionNumber => $fileInfo) {
-                var_dump(temp);
                 if (in_array($versionNumber, $temp, true))
                 {
                     echo $versionNumber;
@@ -151,23 +149,6 @@ class ScanWebsite extends Command
         // If so, I need a second foreach for versionproof
 
         return $version;
-    }
-
-    public function occurrences($temp, $target): array
-    {
-        $occurrences = [];
-
-        foreach ($temp as $tValue) {
-            foreach ($target as $sValue)
-            {
-                if ($tValue === $sValue)
-                {
-                    $occurrences[] = [$tValue];
-                }
-            }
-        }
-
-        return $occurrences;
     }
 
     private function fileExists(string $filename, string $disk): bool
@@ -185,12 +166,9 @@ class ScanWebsite extends Command
         return array_splice($candidates["identifier"], 0, $limit);
     }
 
-    public function detectCms(array $candidates, $httpClient, $website): string
+    public function detectCms(array $candidates, $httpClient, $website): array
     {
-        $i = 0;
-        $j = 0;
-        $result = '';
-        $temp = '';
+        $highestCandidates = [];
 
         foreach($candidates as $cms => $cmsData) {
             $bestCandidates = $this->limitCandidates($cmsData, 15);
@@ -207,28 +185,13 @@ class ScanWebsite extends Command
                     $httpClient->get($website . $readableUrl);
 
                     // Algorithm to find out which CMS is used by the users website
-                    if ($temp === '')
+
+                    if(!isset($highestCandidates[$cms]))
                     {
-                        $temp = $cms;
-
-                        if (!$result)
-                        {
-                            $result = $cms;
-                        }
-
-                        $i++;
-                    } else if ($temp === $cms) {
-                        $i++;
-                    } else if ($temp !== $cms) {
-                        $j++;
-
-                        if ($j > $i)
-                        {
-                            $temp = '';
-                            $result = $cms;
-                            $i = 0;
-                        }
+                        $highestCandidates[$cms] = 0;
                     }
+
+                    $highestCandidates[$cms]++;
 
                 } catch (RequestException $e) {
                     $this->info('=== File not found: '. $readableUrl .' ===');
@@ -238,6 +201,7 @@ class ScanWebsite extends Command
             }
         }
 
-        return $result;
+        asort($highestCandidates);
+        return array_key_last($highestCandidates);
     }
 }
