@@ -75,22 +75,15 @@ class ScanWebsite extends Command
 
         $detectedCms = $this->detectCms($candidates, $httpClient, $website);
 
-        die();
-
-        //$detectedCms = 'Joomla';
-
         $version = $this->scan($candidates, $detectedCms, $httpClient, $website);
-
-        var_dump($version);
     }
 
     public function scan($candidates, $cms, $httpClient, $website)
     {
-        $version = '';
-        $temp = [];
+        $possibleVersions = [];
 
         foreach($candidates[$cms]['identifier'] as $filename => $hashInfo) {
-            $sourceHash = $hashInfo['data'];
+            $sourceHashes = $hashInfo['data'];
             $readableUrl = preg_replace('/^\//', '', $filename);
 
             try {
@@ -99,56 +92,50 @@ class ScanWebsite extends Command
                 $body = (string) $response->getBody();
 
                 $targetHash = md5($body);
-
-                if (isset($sourceHash[$targetHash]))
-                {
-                    $amountOfVersions = count($sourceHash[$targetHash]);
-
-                    // If there is only one version, no further searching required
-                    if ($amountOfVersions === 1)
-                    {
-                        return $sourceHash[$targetHash][0];
-                    }
-
-                    // Unable to detect which version because this file occurrences in more than one version
-                    if (!count($temp))
-                    {
-                        $temp = $sourceHash[$targetHash];
-
-                        continue;
-                    }
-
-                    $occurrences = array_intersect($temp, $sourceHash[$targetHash]);
-
-                    if (count($occurrences) === 1)
-                    {
-                        return $occurrences[0];
-                    }
-
-                    if (count($occurrences) > 1)
-                    {
-                        $temp = $occurrences;
-                    }
-                }
             } catch (RequestException $e) {
-                // $this->info('=== Scan interrupted. '. $e->getMessage() .' ===');
+                $this->info('=== Scan interrupted. File not found. ===');
+
+                continue;
+            }
+
+            if (!isset($sourceHashes[$targetHash]))
+            {
+                continue;
+            }
+
+            $amountOfVersions = count($sourceHashes[$targetHash]);
+
+            // If there is only one version, no further searching required
+            if ($amountOfVersions === 1)
+            {
+                return $sourceHashes[$targetHash][0];
+            }
+
+            // Unable to detect which version because this file occurrences in more than one version
+            if (!count($possibleVersions))
+            {
+                $possibleVersions = $sourceHashes[$targetHash];
+
+                continue;
+            }
+
+            $possibleVersions = array_intersect($possibleVersions, $sourceHashes[$targetHash]);
+
+            if (count($possibleVersions) === 1)
+            {
+                return $possibleVersions[0];
             }
         }
 
-        if ($version === '')
+        if (count($possibleVersions) > 1)
         {
             foreach ($candidates[$cms]['versionproof'] as $versionNumber => $fileInfo) {
-                if (in_array($versionNumber, $temp, true))
+                if (in_array($versionNumber, $possibleVersions, true))
                 {
-                    echo $versionNumber;
+                    // Continue here.
                 }
             }
         }
-
-        // After this foreach I have to check, if the version is still empty
-        // If so, I need a second foreach for versionproof
-
-        return $version;
     }
 
     private function fileExists(string $filename, string $disk): bool
@@ -166,7 +153,7 @@ class ScanWebsite extends Command
         return array_splice($candidates["identifier"], 0, $limit);
     }
 
-    public function detectCms(array $candidates, $httpClient, $website): array
+    public function detectCms(array $candidates, $httpClient, $website): string
     {
         $highestCandidates = [];
 
@@ -202,6 +189,7 @@ class ScanWebsite extends Command
         }
 
         asort($highestCandidates);
+
         return array_key_last($highestCandidates);
     }
 }
