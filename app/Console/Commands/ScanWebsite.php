@@ -68,7 +68,16 @@ class ScanWebsite extends Command
 
         $detectedCms = $this->detectCms($candidates, $httpClient, $website);
 
+        if ($detectedCms === '')
+        {
+            $this->info('=== Scan interrupted. CMS could not be detected. ===');
+
+            return;
+        }
+
         $version = $this->scan($candidates, $detectedCms, $httpClient, $website);
+
+        echo $version;
     }
 
     public function scan(array $candidates, string $cms, $httpClient, string $website): string
@@ -126,13 +135,51 @@ class ScanWebsite extends Command
         // the last few versions left to check on.
         if (count($possibleVersions) > 1)
         {
+            $mostAccurateVersion = [];
+
             foreach ($candidates[$cms]['versionproof'] as $versionNumber => $fileInfo) {
                 if (in_array($versionNumber, $possibleVersions, true))
                 {
-                    // Continue here.
+                    if (!is_array($fileInfo))
+                    {
+                        continue;
+                    }
+
+                    foreach ($fileInfo as $filename => $hash)
+                    {
+                         try {
+                            $response = $httpClient->get($website . $filename);
+
+                            $body = (string) $response->getBody();
+
+                            $websiteFileHash = md5($body);
+
+                            if (!isset($mostAccurateVersion[$versionNumber]))
+                            {
+                                $mostAccurateVersion[$versionNumber] = 0;
+                            }
+
+                             if ($websiteFileHash !== $hash)
+                             {
+                                 continue;
+                             }
+
+                             $mostAccurateVersion[$versionNumber]++;
+                        } catch (RequestException $e) {
+                            $this->info('=== Scan interrupted. File not found. ===');
+
+                            continue;
+                        }
+                    }
                 }
             }
+
+            asort($mostAccurateVersion);
+
+            return array_key_last($mostAccurateVersion);
         }
+
+        return '';
     }
 
     public function limitCandidates(array $candidates, int $limit): array
@@ -158,8 +205,6 @@ class ScanWebsite extends Command
 
                     $httpClient->get($website . $readableUrl);
 
-                    // Algorithm to find out which CMS is used by the users website
-
                     if(!isset($highestCandidates[$cms]))
                     {
                         $highestCandidates[$cms] = 0;
@@ -175,7 +220,12 @@ class ScanWebsite extends Command
             }
         }
 
-        asort($highestCandidates);
+        $sorted = asort($highestCandidates);
+
+        if (!$sorted || !count($highestCandidates))
+        {
+            return '';
+        }
 
         return array_key_last($highestCandidates);
     }
