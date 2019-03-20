@@ -84,6 +84,7 @@ class ScanWebsite extends Command
     {
         $possibleVersions = [];
 
+        // Entry point of this scan. Iterates over the main candidates.
         foreach($candidates[$cms]['identifier'] as $filename => $hashInfo) {
             $sourceHashes = $hashInfo['data'];
             $readableUrl = preg_replace('/^\//', '', $filename);
@@ -93,6 +94,7 @@ class ScanWebsite extends Command
 
                 $body = (string) $response->getBody();
 
+                // Hash generation of the requested file from the website.
                 $targetHash = md5($body);
             } catch (RequestException $e) {
                 $this->info('=== Scan interrupted. File not found. ===');
@@ -100,11 +102,13 @@ class ScanWebsite extends Command
                 continue;
             }
 
+            // First look up, if the candidates hash list contains the generated hash from the website.
             if (!isset($sourceHashes[$targetHash]))
             {
                 continue;
             }
 
+            // Count how many versions are related to this hash.
             $amountOfVersions = count($sourceHashes[$targetHash]);
 
             // If there is only one version, no further searching required
@@ -113,9 +117,13 @@ class ScanWebsite extends Command
                 return $sourceHashes[$targetHash][0];
             }
 
-            // Unable to detect which version because this file occurrences in more than one version
+            /**
+             * Continuing here means that there are more versions related to this hash and -
+             * it is impossible to tell which version the CMS has.
+             */
             if (!count($possibleVersions))
             {
+                // Store those versions and compare them later
                 $possibleVersions = $sourceHashes[$targetHash];
 
                 continue;
@@ -131,7 +139,7 @@ class ScanWebsite extends Command
             }
         }
 
-        // If greater, the version has still not be found. Starting a more detailed and specific scan with -
+        // If greater, the version has not be found yet. Starting a more detailed and specific scan with -
         // the last few versions left to check on.
         if (count($possibleVersions) > 1)
         {
@@ -140,6 +148,7 @@ class ScanWebsite extends Command
             foreach ($candidates[$cms]['versionproof'] as $versionNumber => $fileInfo) {
                 if (in_array($versionNumber, $possibleVersions, true))
                 {
+                    // This may results into a boolean => false; which means that this version cannot be identified.
                     if (!is_array($fileInfo))
                     {
                         continue;
@@ -164,6 +173,7 @@ class ScanWebsite extends Command
                                  continue;
                              }
 
+                             // Only count up if both hashes are equally.
                              $mostAccurateVersion[$versionNumber]++;
                         } catch (RequestException $e) {
                             $this->info('=== Scan interrupted. File not found. ===');
