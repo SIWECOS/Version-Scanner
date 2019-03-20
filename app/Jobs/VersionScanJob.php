@@ -33,24 +33,16 @@ class VersionScanJob implements ShouldQueue
      */
     public function handle()
     {
-        $report = (new VersionScan($this->request))->report();
-        self::notifyCallbacks($this->request->get('callbackurls'), $report);
+        // Set up scan from request
+        $scan = new VersionScan(
+            $this->request->get('url'),
+            10 - $this->request->get('dangerLevel', 0) * 100,
+            $this->request->get('callbackurls', []),
+            $this->request->get('userAgent', 'SIWECOS Version Scanner')
+        );
+
+        // Execute scan
+        $scan->scan();
     }
 
-
-    public static function notifyCallbacks(array $callbackurls, $report)
-    {
-        foreach ($callbackurls as $url) {
-            try {
-                $client = new Client();
-                $client->post($url, [
-                    'http_errors' => false,
-                    'timeout'     => 60,
-                    'json'        => $report,
-                ]);
-            } catch (\Exception $e) {
-                Log::warning('Could not send the report to the following callback url: '.$url);
-            }
-        }
-    }
 }

@@ -40,6 +40,9 @@ class Joomla extends Releases
 
         // Parse branch information
         foreach ($versions as $branchKey => $versionBranch) {
+            // Transform branch name to match our expected format
+            $versions[$branchKey]["branch"] = str_ireplace("Joomla! ", "", $versions[$branchKey]["branch"]);
+
             switch ($versionBranch["branch"]) {
                 case "Joomla! 3":
                 case "Joomla! 4":

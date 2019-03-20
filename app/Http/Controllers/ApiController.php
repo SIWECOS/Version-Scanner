@@ -17,7 +17,16 @@ class ApiController extends Controller
             return 'OK';
         }
 
-        return json_encode((new VersionScan($request))->report());
+        $scan = new VersionScan(
+            $request->get('url'),
+            10 - $request->get('dangerLevel', 0) * 100,
+            $request->get('callbackurls', []),
+            $request->get('userAgent', 'SIWECOS Version Scanner')
+        );
+
+        return response(
+            $scan->scan()
+        );
     }
 
 }
