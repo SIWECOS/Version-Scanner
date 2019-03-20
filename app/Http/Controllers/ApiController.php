@@ -20,19 +20,4 @@ class ApiController extends Controller
         return json_encode((new VersionScan($request))->report());
     }
 
-    public static function notifyCallbacks(array $callbackurls, $report)
-    {
-        foreach ($callbackurls as $url) {
-            try {
-                $client = new Client();
-                $client->post($url, [
-                    'http_errors' => false,
-                    'timeout'     => 60,
-                    'json'        => $report,
-                ]);
-            } catch (\Exception $e) {
-                Log::warning('Could not send the report to the following callback url: '.$url);
-            }
-        }
-    }
 }

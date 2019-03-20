@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\VersionScan;
-use App\Http\Controllers\ApiController;
 use App\Http\Requests\ScanStartRequest;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -35,6 +34,23 @@ class VersionScanJob implements ShouldQueue
     public function handle()
     {
         $report = (new VersionScan($this->request))->report();
-        ApiController::notifyCallbacks($this->request->get('callbackurls'), $report);
+        self::notifyCallbacks($this->request->get('callbackurls'), $report);
+    }
+
+
+    public static function notifyCallbacks(array $callbackurls, $report)
+    {
+        foreach ($callbackurls as $url) {
+            try {
+                $client = new Client();
+                $client->post($url, [
+                    'http_errors' => false,
+                    'timeout'     => 60,
+                    'json'        => $report,
+                ]);
+            } catch (\Exception $e) {
+                Log::warning('Could not send the report to the following callback url: '.$url);
+            }
+        }
     }
 }
