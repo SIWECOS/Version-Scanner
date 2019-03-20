@@ -119,7 +119,15 @@ class VersionScan
         arsort($matchCount);
         reset($matchCount);
 
-        Log::info('Returning '. key($matchCount) .' as CMS with ' . $matchCount[key($matchCount)] . ' matches');
+        $matches = $matchCount[key($matchCount)];
+
+        if ($matches < 4) {
+            Log::info('Returning no CMS because less than 3 matches');
+
+            return;
+        }
+
+        Log::info('Returning '. key($matchCount) .' as CMS with ' . $matches . ' matches');
 
         $this->result["CMS"] = key($matchCount);
     }
