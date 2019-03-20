@@ -12,5 +12,8 @@ npm-debug.log
 yarn-error.log
 .env
 .phpunit.result.cache
-/storage/app/candidates.json
-/storage/app/signatures.json
+/storage/candidates.json
+/storage/signatures.json
+dump.rdb
+supervisord.log
+supervisord.pid
