@@ -46,7 +46,7 @@ class VersionScan
     */
     public function scan(): array
     {
-        $fileExists = Storage::disk('local')->exists('candidates.json');
+        $fileExists = Storage::disk(env('SIGNATUREDISK_DRIVER'))->exists('candidates.json');
 
         // Check if candidates file exists
         if (!$fileExists) {
