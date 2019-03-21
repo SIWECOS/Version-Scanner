@@ -56,7 +56,7 @@ class VersionScan
         }
 
         // Read candidates file
-        $this->candidates = json_decode(Storage::get('candidates.json'), true);
+        $this->candidates = json_decode(Storage::disk('signatures')->get('candidates.json'), true);
 
         if (!is_array($this->candidates) || !count($this->candidates)) {
             throw new \RuntimeException('Invalid candidates file');

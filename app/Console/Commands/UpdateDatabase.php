@@ -51,11 +51,11 @@ class UpdateDatabase extends Command
         $this->info('Reading Signature Database');
 
         // Create signature db file
-        if (!file_exists(storage_path('signatures.json'))) {
-            file_put_contents(storage_path('signatures.json'), json_encode([], JSON_PRETTY_PRINT));
+        if (!Storage::disk('signatures')->exists('signatures.json')) {
+            Storage::disk('signatures')->put('signatures.json', json_encode([], JSON_PRETTY_PRINT));
         }
 
-        $signatures = json_decode(file_get_contents(storage_path('signatures.json')), true);
+        $signatures = json_decode(Storage::disk('signatures')->get('signatures.json'), true);
 
         $this->info('Done!');
         $this->info('');
@@ -182,7 +182,7 @@ class UpdateDatabase extends Command
 
                 // Save signature file
                 $this->info('Saving updated signature file');
-                file_put_contents(storage_path('signatures.json'), json_encode($signatures, JSON_PRETTY_PRINT));
+                Storage::disk('signatures')->put('signatures.json', json_encode($signatures, JSON_PRETTY_PRINT));
 
                 $this->info('');
             }
@@ -224,6 +224,6 @@ class UpdateDatabase extends Command
         }
 
         //Save file
-        file_put_contents(storage_path('candidates.json'), json_encode($candidates, JSON_PRETTY_PRINT));
+        Storage::disk('signatures')->put('candidates.json', json_encode($candidates, JSON_PRETTY_PRINT));
     }
 }
