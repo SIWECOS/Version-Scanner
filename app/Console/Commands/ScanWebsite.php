@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\VersionScan;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Storage;
 
 class ScanWebsite extends Command
 {
@@ -40,7 +41,7 @@ class ScanWebsite extends Command
     {
         $this->info('=== Scanning the website. This could take a few seconds. ===');
 
-        $hasCandidates = file_exists(storage_path('candidates.json'));
+        $hasCandidates = Storage::disk('local')->exists('candidates.json');
 
         if (!$hasCandidates) {
             $this->info('=== Scan interrupted. No candidates found. ===');

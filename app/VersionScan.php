@@ -5,6 +5,7 @@ use App\Webapps\Releases\Releases;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class VersionScan
 {
@@ -43,18 +44,20 @@ class VersionScan
     *
     * @return array
     */
-    public function scan()
+    public function scan(): array
     {
+        $fileExists = Storage::disk('local')->exists('candidates.json');
+
         // Check if candidates file exists
-        if (!file_exists(storage_path('candidates.json'))) {
-            throw new \RuntimeException("Could not find candidates.json in storage folder");
+        if (!$fileExists) {
+            throw new \RuntimeException('Could not find candidates.json in storage folder');
         }
 
         // Read candidates file
-        $this->candidates = json_decode(file_get_contents(storage_path('candidates.json')), true);
+        $this->candidates = json_decode(Storage::get('candidates.json'), true);
 
         if (!is_array($this->candidates) || !count($this->candidates)) {
-            throw new \RuntimeException("Invalid candidates file");
+            throw new \RuntimeException('Invalid candidates file');
         }
 
         // Detect used CMS
@@ -76,7 +79,7 @@ class VersionScan
      *
      * @return void
      */
-    protected function detectCms()
+    protected function detectCms(): void
     {
         $matchCount = [];
 
@@ -137,7 +140,7 @@ class VersionScan
      *
      * @return void
      */
-    public function detectVersion()
+    public function detectVersion(): void
     {
         // We can only detect a version if we know the CMS
         if ($this->result["CMS"] === null) {
@@ -244,7 +247,7 @@ class VersionScan
      *
      * @return void
      */
-    protected function isSupported()
+    protected function isSupported(): void
     {
         // We can only detect a version if we know the CMS
         if ($this->result["CMS"] === null || $this->result["Version"] === null) {
@@ -275,7 +278,7 @@ class VersionScan
     /**
      * Send callbacks with SIWECOS report format
      */
-    protected function notifyCallbacks()
+    protected function notifyCallbacks(): void
     {
         $score = 100;
         $scoreType = 'info';
