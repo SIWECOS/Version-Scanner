@@ -41,7 +41,7 @@ class ScanWebsite extends Command
     {
         $this->info('=== Scanning the website. This could take a few seconds. ===');
 
-        $hasCandidates = Storage::disk(env('SIGNATUREDISK_DRIVER'))->exists('candidates.json');
+        $hasCandidates = Storage::disk('signatures')->exists('candidates.json');
 
         if (!$hasCandidates) {
             $this->info('=== Scan interrupted. No candidates found. ===');
