@@ -17,7 +17,7 @@ class ApiController extends Controller
 
         $scan = new VersionScan(
             $request->get('url'),
-            10 - $request->get('dangerLevel', 0) * 100,
+            (10 - $request->get('dangerLevel', 0)) * 10,
             $request->get('callbackurls', []),
             $request->get('userAgent', 'SIWECOS Version Scanner')
         );
