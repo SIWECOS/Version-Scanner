@@ -9,7 +9,7 @@ COPY Docker/Caddyfile /etc/Caddyfile
 COPY Docker/supervisord.conf /etc/supervisord.conf
 
 COPY . /scanner
-COPY .env /scanner/.env
+COPY .env.prod /scanner/.env
 
 WORKDIR /scanner
 RUN composer install \
