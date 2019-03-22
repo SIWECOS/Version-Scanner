@@ -26,7 +26,7 @@ jobs:
     - stage: build docker image
       script:
       - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-      - docker build -t hshs-domxss-scanner .
+      - docker build -t version-scanner .
       - docker images
       - docker tag version-scanner "$DOCKER_REPO"/version-scanner:"$TRAVIS_BRANCH"
       - docker push "$DOCKER_REPO"/version-scanner:"$TRAVIS_BRANCH"
