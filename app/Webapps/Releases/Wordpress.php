@@ -23,7 +23,6 @@ class Wordpress extends Releases
         // Fetch data from
         try {
             $apiResponse = $http->get('https://api.wordpress.org/core/version-check/1.7/');
-
         } catch (ClientException $e) {
             throw new \RuntimeException("Could not fetch latest version");
         }
@@ -67,7 +66,6 @@ class Wordpress extends Releases
         // Fetch data from
         try {
             $apiResponse = $http->get('https://wordpress.org/download/releases/');
-
         } catch (ClientException $e) {
             throw new \RuntimeException("Could not fetch releases for TYPO3");
         }

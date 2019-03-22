@@ -108,7 +108,6 @@ class VersionScan
                     }
 
                     $matchCount[$cms]++;
-
                 } catch (RequestException $e) {
                     Log::info('=== File not found: '. $filename .' ===');
 
@@ -235,7 +234,6 @@ class VersionScan
 
                             return;
                         }
-
                     } catch (RequestException $e) {
                         continue;
                     }

@@ -31,7 +31,6 @@ class Joomla extends Releases
         // Fetch data from
         try {
             $apiResponse = $http->get('https://downloads.joomla.org/api/v1/latest/cms');
-
         } catch (ClientException $e) {
             throw new \RuntimeException("Could not fetch latest version");
         }
@@ -75,7 +74,6 @@ class Joomla extends Releases
         // Fetch data from
         try {
             $apiResponse = $http->get('https://downloads.joomla.org/api/v1/releases/cms');
-
         } catch (ClientException $e) {
             throw new \RuntimeException("Could not fetch releases for Joomla");
         }

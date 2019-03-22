@@ -71,7 +71,7 @@ The parameter `url` is required:
 
 Direct scanning via CLI is also possible, use this command for it:
 
-`docker run -it --rm  -v /PATH/TO/SIGNATURES:/scanner/storage/signatures --entrypoint "/usr/bin/php" siwecos/version-scanner -d memory_limit=8092M /scanner/artisan svs:version --website=https://example.com`
+`docker run -it --rm  -v /PATH/TO/SIGNATURES:/scanner/storage/signatures --entrypoint "/usr/bin/php" siwecos/version-scanner /scanner/artisan svs:version --website=https://example.com`
 
 ## HTTP-Output-Messages
 

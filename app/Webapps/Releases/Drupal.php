@@ -20,7 +20,6 @@ class Drupal extends Releases
         // Fetch data from
         try {
             $apiResponse = $http->get('https://updates.drupal.org/release-history/drupal/all');
-
         } catch (ClientException $e) {
             throw new \RuntimeException("Could not fetch latest version");
         }
@@ -94,7 +93,6 @@ class Drupal extends Releases
         // Fetch data from
         try {
             $apiResponse = $http->get('https://updates.drupal.org/release-history/drupal/all');
-
         } catch (ClientException $e) {
             throw new \RuntimeException("Could not fetch latest version");
         }

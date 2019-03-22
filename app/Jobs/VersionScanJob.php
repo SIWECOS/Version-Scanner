@@ -44,5 +44,4 @@ class VersionScanJob implements ShouldQueue
         // Execute scan
         $scan->scan();
     }
-
 }

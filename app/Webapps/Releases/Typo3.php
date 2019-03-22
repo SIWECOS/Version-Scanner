@@ -26,7 +26,6 @@ class Typo3 extends Releases
         // Fetch data from
         try {
             $apiResponse = $http->get('https://get.typo3.org/json');
-
         } catch (ClientException $e) {
             throw new \RuntimeException("Could not fetch latest version");
         }
@@ -62,7 +61,6 @@ class Typo3 extends Releases
         // Fetch data from
         try {
             $apiResponse = $http->get('https://get.typo3.org/json');
-
         } catch (ClientException $e) {
             throw new \RuntimeException("Could not fetch releases for TYPO3");
         }

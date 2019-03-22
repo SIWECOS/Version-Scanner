@@ -1,0 +1,33 @@
+language: php
+
+php:
+  - "7.2"
+
+cache:
+  directories:
+    - "$HOME/google-cloud-sdk/"
+
+dist: trusty
+
+before_script:
+  - composer self-update
+  - composer install --no-interaction
+
+jobs:
+  include:
+    - language: php
+      stage: phpcs
+      php: 7.2
+      script:
+        - composer selfupdate
+        - composer install
+        - ./vendor/bin/phpcs --extensions=php --standard=PSR2 app
+
+    - stage: build docker image
+      script:
+      - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+      - docker build -t hshs-domxss-scanner .
+      - docker images
+      - docker tag version-scanner "$DOCKER_REPO"/version-scanner:"$TRAVIS_BRANCH"
+      - docker push "$DOCKER_REPO"/version-scanner:"$TRAVIS_BRANCH"
+

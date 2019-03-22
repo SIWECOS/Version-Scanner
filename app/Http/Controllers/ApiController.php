@@ -26,5 +26,4 @@ class ApiController extends Controller
             $scan->scan()
         );
     }
-
 }
