@@ -334,7 +334,7 @@ class VersionScan
         if ($this->result["CMS"] !== null && $this->result["Version"] === null) {
             $testDetails = [
                 [
-                    "placeholder" => "CANT_DETECT_VERSION",
+                    "placeholder" => "CMS_CANT_DETECT_VERSION",
                     "values" => [
                         "cms" => $this->result["CMS"]
                     ]
@@ -349,7 +349,7 @@ class VersionScan
         if ($this->result["CMS"] === null) {
             $testDetails = [
                 [
-                    "placeholder" => "CANT_DETECT_CMS"
+                    "placeholder" => "CMS_CANT_DETECT_CMS"
                 ]
             ];
 
