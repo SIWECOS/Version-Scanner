@@ -66,11 +66,11 @@ return [
 
         'signatures' => [
             'driver' => env('SIGNATUREDISK_DRIVER'),
-            'key' => env('SIGNATUREDISK_ACCESS_KEY_ID'),
-            'secret' => env('SIGNATUREDISK_SECRET_ACCESS_KEY'),
-            'region' => env('SIGNATUREDISK_DEFAULT_REGION'),
+            'project_id' => env('SIGNATUREDISK_PROJECT_ID'),
+            'key_file' => env('SIGNATUREDISK_KEY_FILE'),
             'bucket' => env('SIGNATUREDISK_BUCKET'),
-            'url' => env('SIGNATUREDISK_URL'),
+            'url' => env('SIGNATUREDISK_URL', null),
+            'storage_api_uri' => env('SIGNATUREDISK_API_URL', null),
             'root' => env('SIGNATUREDISK_ROOT')
         ]
 
