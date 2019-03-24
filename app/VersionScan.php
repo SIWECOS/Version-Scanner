@@ -26,6 +26,14 @@ class VersionScan
         "Supported" => null
     ];
 
+    /**
+     * VersionScan constructor.
+     *
+     * @param string $website
+     * @param int    $delay  delay in ms
+     * @param array  $callbackUrls
+     * @param bool   $userAgent
+     */
     public function __construct(string $website, int $delay = 0, array $callbackUrls = [], $userAgent = false)
     {
         // Save website with trailing slash
@@ -96,7 +104,7 @@ class VersionScan
                 $filename = ltrim($filename, '/');
 
                 // Sleep to not overwhelm the server
-                sleep($this->delay / 1000);
+                usleep($this->delay * 1000);
 
                 try {
                     $this->client->get($this->website . $filename);
@@ -156,7 +164,7 @@ class VersionScan
             $filename = ltrim($filename, '/');
 
             // Sleep to not overwhelm the server
-            sleep($this->delay / 1000);
+            usleep($this->delay * 1000);
 
             try {
                 $response = $this->client->get($this->website . $filename);
@@ -219,7 +227,7 @@ class VersionScan
                     $filename = ltrim($filename, '/');
 
                     // Sleep to not overwhelm the server
-                    sleep($this->delay / 1000);
+                    usleep($this->delay * 1000);
 
                     try {
                         $response = $this->client->get($this->website . $filename);

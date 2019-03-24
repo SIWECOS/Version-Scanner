@@ -36,7 +36,7 @@ class VersionScanJob implements ShouldQueue
         // Set up scan from request
         $scan = new VersionScan(
             $this->request->get('url'),
-            (10 - $this->request->get('dangerLevel', 0)) * 10,
+            (int) (10 - $this->request->get('dangerLevel', 0)) * 20 + 10,
             $this->request->get('callbackurls', []),
             $this->request->get('userAgent', 'SIWECOS Version Scanner')
         );
