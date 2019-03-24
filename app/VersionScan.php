@@ -208,7 +208,7 @@ class VersionScan
 
             // Check again, if the intersection resulted in one entry. No further searching required then.
             if (count($possibleVersions) === 1) {
-                $this->result["Version"] = $possibleVersions[0];
+                $this->result["Version"] = reset($possibleVersions);
 
                 return;
             }
