@@ -16,6 +16,6 @@ return [
     ],
     'Joomla' => [
         'ignoredFilenames' => ['index.html', 'joomla.xml', '.htaccess'],
-        'ignoredFolders' => ['#^installation#', '#^libraries#', '#^build#']
+        'ignoredFolders' => ['#^installation#', '#^libraries#', '#^build#', '#^administrator#']
     ]
 ];
