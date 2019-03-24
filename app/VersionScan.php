@@ -128,11 +128,23 @@ class VersionScan
             return;
         }
 
+        // Check for an edge case: if multiple CMS have the full match count, it's most likely because
+        // the server returns 200 status code for 404 pages
+        if (count(array_filter($matchCount, function ($count) {
+            return ($count === 20);
+        })) > 1) {
+            Log::info('Returning no CMS because server is misconfigured');
+
+            return;
+        }
+
+        // Sort matches array
         arsort($matchCount);
         reset($matchCount);
 
         $matches = $matchCount[key($matchCount)];
 
+        // If we have less than 4 matches, it's very likely that this is not one of our CMS
         if ($matches < 4) {
             Log::info('Returning no CMS because less than 3 matches');
 
