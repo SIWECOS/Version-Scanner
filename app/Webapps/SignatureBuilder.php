@@ -8,7 +8,7 @@ use Symfony\Component\Finder\SplFileInfo;
 
 class SignatureBuilder
 {
-    const FILETYPES = ["js", "css", "png", "jpg", "gif", "sql", "xml", "txt", "html", "md", "sh"];
+    const FILETYPES = ["js", "css", "png", "jpg", "gif", "sql", "txt", "html", "md", "sh"];
 
     protected $config = [
         "ignoredFolders" => [],
