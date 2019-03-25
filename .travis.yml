@@ -46,11 +46,16 @@ before_deploy:
   - gcloud --quiet components update kubectl
 
 deploy:
-  provider: script
-  script: chmod +x Docker/deploy-staging.sh && ./Docker/deploy-staging.sh
-  skip_cleanup: true
-  on:
-    branch: develop
+  - provider: script
+    script: chmod +x Docker/deploy-staging.sh && ./Docker/deploy-staging.sh
+    skip_cleanup: true
+    on:
+      branch: develop
+  - provider: script
+    script: chmod +x Docker/deploy-master.sh && ./Docker/deploy-master.sh
+    skip_cleanup: true
+    on:
+      branch: master
 
 
 
