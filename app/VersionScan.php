@@ -70,6 +70,8 @@ class VersionScan
             throw new \RuntimeException('Invalid candidates file');
         }
 
+        Log::info('=== Starting Scan Job for : '. $this->website .' ===');
+
         // Detect used CMS
         $this->detectCms();
         $this->detectVersion();
@@ -79,6 +81,8 @@ class VersionScan
         if (count($this->callbackUrls)) {
             $this->notifyCallbacks();
         }
+
+        Log::info('=== Finishing Scan Job for : '. $this->website .' ===');
 
         return $this->result;
     }
@@ -107,9 +111,11 @@ class VersionScan
                 usleep($this->delay * 1000);
 
                 try {
-                    $this->client->get($this->website . $filename);
+                    $this->client->get($this->website . $filename, [
+                        'timeout'     => 5
+                    ]);
 
-                    Log::info('=== File found: '. $filename .' ===');
+                    Log::info('=== File found: '. $this->website . $filename .' ===');
 
                     if (!isset($matchCount[$cms])) {
                         $matchCount[$cms] = 0;
@@ -117,7 +123,7 @@ class VersionScan
 
                     $matchCount[$cms]++;
                 } catch (RequestException $e) {
-                    Log::info('=== File not found: '. $filename .' ===');
+                    Log::info('=== File not found: '. $this->website . $filename .' ===');
 
                     continue;
                 }
@@ -163,6 +169,9 @@ class VersionScan
      */
     public function detectVersion(): void
     {
+        Log::info('=== Detecting used Version ===');
+
+
         // We can only detect a version if we know the CMS
         if ($this->result["CMS"] === null) {
             return;
@@ -175,22 +184,32 @@ class VersionScan
             $sourceHashes = $hashInfo['data'];
             $filename = ltrim($filename, '/');
 
+            Log::info('Fetching ' . $filename);
+
             // Sleep to not overwhelm the server
             usleep($this->delay * 1000);
 
             try {
-                $response = $this->client->get($this->website . $filename);
+                $response = $this->client->get($this->website . $filename, [
+                    'timeout'     => 5
+                ]);
 
                 $body = (string) $response->getBody();
 
                 // Hash generation of the requested file from the website.
                 $targetHash = md5($body);
+
+                Log::info('File ' . $this->website . $filename . ' with hash ' . $targetHash . ' found');
             } catch (RequestException $e) {
+                Log::info('File ' . $this->website . $filename . ' not found, next file...');
+
                 continue;
             }
 
             // First look up, if the candidates hash list contains the generated hash from the website.
             if (!isset($sourceHashes[$targetHash])) {
+                Log::info('Unknown hash of ' . $this->website . $filename . ', next file...');
+
                 continue;
             }
 
@@ -218,6 +237,8 @@ class VersionScan
             // Get the intersection of the current hash tree and the one before
             $possibleVersions = array_intersect($possibleVersions, $sourceHashes[$targetHash]);
 
+            Log::info('Remaining versions after this file: ' . count($possibleVersions));
+
             // Check again, if the intersection resulted in one entry. No further searching required then.
             if (count($possibleVersions) === 1) {
                 $this->result["Version"] = reset($possibleVersions);
@@ -242,7 +263,9 @@ class VersionScan
                     usleep($this->delay * 1000);
 
                     try {
-                        $response = $this->client->get($this->website . $filename);
+                        $response = $this->client->get($this->website . $filename, [
+                            'timeout'     => 5
+                        ]);
 
                         $body = (string) $response->getBody();
 
@@ -283,7 +306,7 @@ class VersionScan
         // Try to find the right branch
         foreach ($branches as $branch) {
             if (stripos($this->result["Version"], $branch["branch"]) === 0) {
-                Log::info("Found a matching branch " . $branch["branch"] . " for version" . $this->result["Version"]);
+                Log::info("Found a matching branch " . $branch["branch"] . " for version " . $this->result["Version"]);
 
                 // Compare if we are using a supported version
                 $this->result["Supported"] = $branch["supported"];
