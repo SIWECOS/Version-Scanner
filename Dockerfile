@@ -5,6 +5,8 @@ LABEL MAINTAINER="David Jardin <david.jardin@cms-garden.org>"
 
 RUN apk --update add bash php7-mcrypt php7-ctype php7-xml php7-simplexml php7-xmlwriter php7-fileinfo php7-sqlite3 php7-pdo_sqlite php7-simplexml supervisor redis && rm /var/cache/apk/*
 
+RUN sed -i '/memory_limit = 128M/c\memory_limit = 256M' /etc/php7/php.ini
+
 COPY Docker/Caddyfile /etc/Caddyfile
 COPY Docker/supervisord.conf /etc/supervisord.conf
 
