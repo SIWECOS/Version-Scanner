@@ -11,6 +11,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
 
 class VersionScanJob implements ShouldQueue
 {
@@ -35,6 +36,9 @@ class VersionScanJob implements ShouldQueue
      */
     public function handle()
     {
+        Log::info('Starting Scan Job for ' . $this->request->get('url'));
+        Log::info('Queue jobs remaining ' . Queue::size($this->queue));
+
         // Set up scan from request
         $scan = new VersionScan(
             $this->request->get('url'),
