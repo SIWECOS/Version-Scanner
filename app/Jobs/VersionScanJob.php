@@ -4,11 +4,13 @@ namespace App\Jobs;
 
 use App\VersionScan;
 use App\Http\Requests\ScanStartRequest;
+use GuzzleHttp\Client;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class VersionScanJob implements ShouldQueue
 {
@@ -43,5 +45,40 @@ class VersionScanJob implements ShouldQueue
 
         // Execute scan
         $scan->scan();
+    }
+
+    /**
+     * The job failed to process.
+     *
+     * @param  \Exception  $exception
+     * @return void
+     */
+    public function failed(\Exception $exception)
+    {
+        foreach ($this->request->get('callbackurls', []) as $url) {
+            Log::info(
+                'Making job-failed callback to ' . $url . ' with content ' . json_encode($exception->getMessage())
+            );
+
+            try {
+                $client = new Client;
+                $client->post(
+                    $url,
+                    [
+                        'http_errors' => false,
+                        'timeout' => 60,
+                        'json' => [
+                            'name'         => 'CMSVersion',
+                            'version'      => file_get_contents(base_path('VERSION')),
+                            'hasError'     => true,
+                            'errorMessage' => $exception->getMessage(),
+                            'score'        => 0
+                        ],
+                    ]
+                );
+            } catch (\Exception $e) {
+                Log::warning('Could not send the failed report to the following callback url: ' . $url);
+            }
+        }
     }
 }

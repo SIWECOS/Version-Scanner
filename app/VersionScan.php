@@ -418,7 +418,8 @@ class VersionScan
         ];
 
         foreach ($this->callbackUrls as $url) {
-            Log::info('Making callback to ' . $url . ' with content ' . json_encode($report));
+            Log::info('Making callback for ' . $this->website . ' to '
+                . $url . ' with content ' . json_encode($report));
 
             try {
                 $this->client->post($url, [
@@ -430,7 +431,7 @@ class VersionScan
                 Log::warning('Could not send the report to the following callback url: '.$url);
             }
 
-            Log::info('Finished callback');
+            Log::info('Finished callback for ' . $this->website);
         }
     }
 }
