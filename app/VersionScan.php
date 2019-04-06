@@ -5,7 +5,6 @@ namespace App;
 
 use App\Webapps\Releases\Releases;
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -122,7 +121,7 @@ class VersionScan
                     }
 
                     $matchCount[$cms]++;
-                } catch (RequestException $e) {
+                } catch (\Exception $e) {
                     Log::info('=== File not found: '. $this->website . $filename .' ===');
 
                     continue;
@@ -200,7 +199,7 @@ class VersionScan
                 $targetHash = md5($body);
 
                 Log::info('File ' . $this->website . $filename . ' with hash ' . $targetHash . ' found');
-            } catch (RequestException $e) {
+            } catch (\Exception $e) {
                 Log::info('File ' . $this->website . $filename . ' not found, next file...');
 
                 continue;
@@ -277,7 +276,7 @@ class VersionScan
 
                             return;
                         }
-                    } catch (RequestException $e) {
+                    } catch (\Exception $e) {
                         continue;
                     }
                 }
