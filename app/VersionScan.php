@@ -399,7 +399,7 @@ class VersionScan
         }
 
         $report = [
-            'name'         => 'CMSVersion',
+            'name'         => 'CMSVERSION',
             'version'      => file_get_contents(base_path('VERSION')),
             'hasError'     => false,
             'errorMessage' => null,
