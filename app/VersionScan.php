@@ -323,7 +323,7 @@ class VersionScan
     protected function notifyCallbacks(): void
     {
         $score = 100;
-        $scoreType = 'info';
+        $scoreType = 'success';
         $testDetails = null;
 
         // Case 1: CMS and Version detected, up to date and supported
@@ -383,7 +383,7 @@ class VersionScan
                 ]
             ];
 
-            $scoreType = 'warning';
+            $scoreType = 'info';
         }
 
 
@@ -395,7 +395,7 @@ class VersionScan
                 ]
             ];
 
-            $scoreType = 'warning';
+            $scoreType = 'info';
         }
 
         $report = [
