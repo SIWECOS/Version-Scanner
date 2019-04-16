@@ -19,10 +19,7 @@ class VersionScan
 
     protected $result = [
         "CMS" => null,
-        "Version" => null,
-        "IsLatest" => null,
-        "Latest" => null,
-        "Supported" => null
+        "Versions" => []
     ];
 
     /**
@@ -217,7 +214,7 @@ class VersionScan
 
             // If there is only one version, no further searching required
             if ($amountOfVersions === 1) {
-                $this->result["Version"] = $sourceHashes[$targetHash][0];
+                $this->result["Versions"] = [$sourceHashes[$targetHash][0]];
 
                 return;
             }
@@ -240,7 +237,7 @@ class VersionScan
 
             // Check again, if the intersection resulted in one entry. No further searching required then.
             if (count($possibleVersions) === 1) {
-                $this->result["Version"] = reset($possibleVersions);
+                $this->result["Versions"] = [reset($possibleVersions)];
 
                 return;
             }
@@ -272,7 +269,7 @@ class VersionScan
 
                         // We have an exact match, it's the version we are looking for
                         if ($websiteFileHash === $hash) {
-                            $this->result["Version"] = $versionNumber;
+                            $this->result["Versions"] = [$versionNumber];
 
                             return;
                         }
@@ -282,6 +279,8 @@ class VersionScan
                 }
             }
         }
+
+        $this->result["Versions"] = $possibleVersions;
     }
 
     /**
@@ -292,7 +291,7 @@ class VersionScan
     protected function isSupported(): void
     {
         // We can only detect a version if we know the CMS
-        if ($this->result["CMS"] === null || $this->result["Version"] === null) {
+        if ($this->result["CMS"] === null || $this->result["Versions"] === null) {
             return;
         }
 
@@ -302,19 +301,63 @@ class VersionScan
         $releaseClass = new $releaseClassName;
         $branches = $releaseClass->getLatest();
 
+        $detailedVersions = $this->encloseMoreDetailsToVersions($this->result["Versions"]);
+
         // Try to find the right branch
-        foreach ($branches as $branch) {
-            if (stripos($this->result["Version"], $branch["branch"]) === 0) {
-                Log::info("Found a matching branch " . $branch["branch"] . " for version " . $this->result["Version"]);
+        foreach ($this->result["Versions"] as $version) {
+            $matchedBranch = $this->getBranchForVersion($branches, $version);
+
+            if (count($matchedBranch) > 0) {
+                Log::info("Found a matching branch " . $matchedBranch["branch"] . " for version " . $version);
 
                 // Compare if we are using a supported version
-                $this->result["Supported"] = $branch["supported"];
-                $this->result["IsLatest"] = version_compare($this->result["Version"], $branch["version"], '>=');
-                $this->result["Latest"] = $branch["version"];
-
-                return;
+                $detailedVersions[$version]["Supported"] = $matchedBranch["supported"];
+                $detailedVersions[$version]["IsLatest"] = version_compare($version, $matchedBranch["version"], '>=');
+                $detailedVersions[$version]["Latest"] = $matchedBranch["version"];
             }
         }
+
+        $this->result["Versions"] = $detailedVersions;
+    }
+
+    /**
+     * Adds up some details to each version whether its supported and latest
+     *
+     * @param array $versions
+     *
+     * @return array
+     */
+    protected function encloseMoreDetailsToVersions(array $versions): array
+    {
+        $moreDetails = [];
+
+        foreach ($versions as $version) {
+            $moreDetails[$version] = [
+                "IsLatest" => null,
+                "Latest" => null,
+                "Supported" => null
+            ];
+        }
+
+        return $moreDetails;
+    }
+
+    /**
+     * @param array $branches
+     * @param string $version
+     * @return array
+     */
+    protected function getBranchForVersion(array $branches, string $version): array
+    {
+        $matchedBranch = "";
+
+        foreach ($branches as $branch) {
+            if (stripos($version, $branch["branch"]) === 0) {
+                $matchedBranch = $branch;
+            }
+        }
+
+        return $matchedBranch;
     }
 
     /**
@@ -333,7 +376,7 @@ class VersionScan
                     "placeholder" => "CMS_UPTODATE",
                     "values" => [
                         "cms" => $this->result["CMS"],
-                        "version" => $this->result["Version"]
+                        "version" => $this->result["Versions"]
                     ]
                 ]
             ];
@@ -346,7 +389,7 @@ class VersionScan
                     "placeholder" => "CMS_OUTDATED",
                     "values" => [
                         "cms" => $this->result["CMS"],
-                        "version" => $this->result["Version"],
+                        "version" => $this->result["Versions"],
                         "latest" => $this->result["Latest"]
                     ]
                 ]
@@ -363,7 +406,7 @@ class VersionScan
                     "placeholder" => "CMS_OUT_OF_SUPPORT",
                     "values" => [
                         "cms" => $this->result["CMS"],
-                        "version" => $this->result["Version"]
+                        "version" => $this->result["Versions"]
                     ]
                 ]
             ];
@@ -373,7 +416,7 @@ class VersionScan
         }
 
         // Case 4: CMS found but can't detect version
-        if ($this->result["CMS"] !== null && $this->result["Version"] === null) {
+        if ($this->result["CMS"] !== null && $this->result["Versions"] === null) {
             $testDetails = [
                 [
                     "placeholder" => "CMS_CANT_DETECT_VERSION",
