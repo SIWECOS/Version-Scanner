@@ -415,8 +415,8 @@ class VersionScan
                     "placeholder" => "CMS_OUTDATED",
                     "values" => [
                         "cms" => $this->result["CMS"],
-                        "version" => $details["Supported"],
-                        "latest" => $details["IsLatest"]
+                        "version" => implode(', ', array_keys($this->result["Versions"])),
+                        "latest" => $this->result["Versions"][key($this->result["Versions"])]['Latest']
                     ]
                 ]
             ];
@@ -432,7 +432,7 @@ class VersionScan
                     "placeholder" => "CMS_OUT_OF_SUPPORT",
                     "values" => [
                         "cms" => $this->result["CMS"],
-                        "version" => $version
+                        "version" => implode(', ', array_keys($this->result["Versions"]))
                     ]
                 ]
             ];
@@ -448,7 +448,7 @@ class VersionScan
                     "placeholder" => "CMS_MIGHT_UPTODATE",
                     "values" => [
                         "cms" => $this->result["CMS"],
-                        "version" => $version
+                        "version" => implode(', ', array_keys($this->result["Versions"]))
                     ]
                 ]
             ];
