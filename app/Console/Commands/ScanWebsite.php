@@ -64,17 +64,21 @@ class ScanWebsite extends Command
         $this->info(
             ($result["CMS"] === null) ? 'CMS: Unknown' : 'CMS: ' . $result["CMS"]
         );
-        $this->info(
-            ($result["Version"] === null) ? 'Version: Unknown' : 'Version: ' . $result["Version"]
-        );
-        $this->info(
-            ($result["IsLatest"] === null) ? 'Is Latest: Unknown' : 'Is Latest: ' . $result["IsLatest"]
-        );
-        $this->info(
-            ($result["Latest"] === null) ? 'Latest: Unknown' : 'Latest: ' . $result["Latest"]
-        );
-        $this->info(
-            ($result["Supported"] === null) ? 'Is Supported: Unknown' : 'Is Supported: ' . $result["Supported"]
-        );
+
+        $this->info($result["Versions"] === null ? 'Version: Unknown' : 'Detected Versions:');
+
+        foreach ($result["Versions"] as $version => $details) {
+            $this->info("Version: " . $version);
+            $this->info(
+                ($details["IsLatest"] === null) ? 'Is Latest: Unknown' : 'Is Latest: ' . ($details["IsLatest"] ? 'true' : 'false')
+            );
+            $this->info(
+                ($details["Latest"] === null) ? 'Latest: Unknown' : 'Latest: ' . ($details["Latest"] ? $details["Latest"] : 'false')
+            );
+            $this->info(
+                ($details["Supported"] === null) ? 'Is Supported: Unknown' : 'Is Supported: ' . ($details["Supported"] ? 'true' : 'false')
+            );
+            $this->info('=======================');
+        }
     }
 }
