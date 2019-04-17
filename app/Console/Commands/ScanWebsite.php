@@ -65,7 +65,7 @@ class ScanWebsite extends Command
             ($result["CMS"] === null) ? 'CMS: Unknown' : 'CMS: ' . $result["CMS"]
         );
 
-        $this->info($result["Versions"] === null ? 'Version: Unknown' : '');
+        $this->info($result["Versions"] === null ? 'Version: Unknown' : 'Detected Versions:');
 
         foreach ($result["Versions"] as $version => $details) {
             $this->info("Version: " . $version);
@@ -73,7 +73,7 @@ class ScanWebsite extends Command
                 ($details["IsLatest"] === null) ? 'Is Latest: Unknown' : 'Is Latest: ' . ($details["IsLatest"] ? 'true' : 'false')
             );
             $this->info(
-                ($details["Latest"] === null) ? 'Latest: Unknown' : 'Latest: ' . ($details["Latest"] ? 'true' : 'false')
+                ($details["Latest"] === null) ? 'Latest: Unknown' : 'Latest: ' . ($details["Latest"] ? $details["Latest"] : 'false')
             );
             $this->info(
                 ($details["Supported"] === null) ? 'Is Supported: Unknown' : 'Is Supported: ' . ($details["Supported"] ? 'true' : 'false')
