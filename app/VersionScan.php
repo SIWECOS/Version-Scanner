@@ -19,10 +19,7 @@ class VersionScan
 
     protected $result = [
         "CMS" => null,
-        "Version" => null,
-        "IsLatest" => null,
-        "Latest" => null,
-        "Supported" => null
+        "Versions" => []
     ];
 
     /**
@@ -217,7 +214,7 @@ class VersionScan
 
             // If there is only one version, no further searching required
             if ($amountOfVersions === 1) {
-                $this->result["Version"] = $sourceHashes[$targetHash][0];
+                $this->result["Versions"] = [$sourceHashes[$targetHash][0]];
 
                 return;
             }
@@ -240,7 +237,7 @@ class VersionScan
 
             // Check again, if the intersection resulted in one entry. No further searching required then.
             if (count($possibleVersions) === 1) {
-                $this->result["Version"] = reset($possibleVersions);
+                $this->result["Versions"] = [reset($possibleVersions)];
 
                 return;
             }
@@ -272,7 +269,7 @@ class VersionScan
 
                         // We have an exact match, it's the version we are looking for
                         if ($websiteFileHash === $hash) {
-                            $this->result["Version"] = $versionNumber;
+                            $this->result["Versions"] = [$versionNumber];
 
                             return;
                         }
@@ -282,6 +279,8 @@ class VersionScan
                 }
             }
         }
+
+        $this->result["Versions"] = $possibleVersions;
     }
 
     /**
@@ -292,29 +291,46 @@ class VersionScan
     protected function isSupported(): void
     {
         // We can only detect a version if we know the CMS
-        if ($this->result["CMS"] === null || $this->result["Version"] === null) {
+        if ($this->result["CMS"] === null || $this->result["Versions"] === null) {
             return;
         }
 
+        $detailedVersions = [];
+
+        // Try to find the right branch
+        foreach ($this->result["Versions"] as $version) {
+            $matchedBranch = $this->getBranchForVersion($version);
+            Log::info("Found a matching branch " . $matchedBranch["branch"] . " for version " . $version);
+
+            // Compare if we are using a supported version
+            $detailedVersions[$version] = [];
+            $detailedVersions[$version]["Supported"] = $matchedBranch["supported"];
+            $detailedVersions[$version]["IsLatest"] = version_compare($version, $matchedBranch["version"], '>=');
+            $detailedVersions[$version]["Latest"] = $matchedBranch["version"];
+        }
+
+        $this->result["Versions"] = $detailedVersions;
+    }
+
+    /**
+     * @param string $version
+     * @return array
+     */
+    protected function getBranchForVersion(string $version): array
+    {
         // Get latest versions for CMS
         $releaseClassName = 'App\\Webapps\\Releases\\' . $this->result["CMS"];
         /** @var Releases $releaseClass */
         $releaseClass = new $releaseClassName;
         $branches = $releaseClass->getLatest();
 
-        // Try to find the right branch
         foreach ($branches as $branch) {
-            if (stripos($this->result["Version"], $branch["branch"]) === 0) {
-                Log::info("Found a matching branch " . $branch["branch"] . " for version " . $this->result["Version"]);
-
-                // Compare if we are using a supported version
-                $this->result["Supported"] = $branch["supported"];
-                $this->result["IsLatest"] = version_compare($this->result["Version"], $branch["version"], '>=');
-                $this->result["Latest"] = $branch["version"];
-
-                return;
+            if (stripos($version, $branch["branch"]) === 0) {
+                return $branch;
             }
         }
+
+        throw new \RuntimeException("Could not find branch for CMS version " .$version);
     }
 
     /**
@@ -326,28 +342,51 @@ class VersionScan
         $scoreType = 'success';
         $testDetails = null;
 
-        // Case 1: CMS and Version detected, up to date and supported
-        if ($this->result["CMS"] !== null && $this->result["Supported"] && $this->result["IsLatest"]) {
+        // Case 1: CMS and only 1 Version detected, up to date and supported
+        if (count($this->result["Versions"]) === 1
+            && $this->result["CMS"] !== null
+            && $this->result["Versions"][key($this->result["Versions"])]["Supported"]
+            && $this->result["Versions"][key($this->result["Versions"])]["IsLatest"]
+        ) {
             $testDetails = [
                 [
                     "placeholder" => "CMS_UPTODATE",
                     "values" => [
                         "cms" => $this->result["CMS"],
-                        "version" => $this->result["Version"]
+                        "version" => key($this->result["Versions"])
                     ]
                 ]
             ];
         }
 
+        $outdated = 0;
+        $upToDate = 0;
+        $unsupported = 0;
+
+        foreach ($this->result["Versions"] as $version => $details) {
+            if ($this->result["CMS"] !== null && $details["Supported"] && !$details["IsLatest"]) {
+                $outdated++;
+            }
+
+            if ($this->result["CMS"] !== null && $details["Supported"] && $details["IsLatest"]) {
+                $upToDate++;
+            }
+
+            if ($this->result["CMS"] !== null && !$details["Supported"]) {
+                $unsupported++;
+            }
+        }
+
+
         // Case 2: CMS and Version detected but outdated
-        if ($this->result["CMS"] !== null && $this->result["Supported"] && $this->result["IsLatest"] === false) {
+        if ($this->result["CMS"] !== null && $upToDate === 0 && $outdated > 0) {
             $testDetails = [
                 [
                     "placeholder" => "CMS_OUTDATED",
                     "values" => [
                         "cms" => $this->result["CMS"],
-                        "version" => $this->result["Version"],
-                        "latest" => $this->result["Latest"]
+                        "version" => implode(', ', array_keys($this->result["Versions"])),
+                        "latest" => $this->result["Versions"][key($this->result["Versions"])]['Latest']
                     ]
                 ]
             ];
@@ -357,13 +396,13 @@ class VersionScan
         }
 
         // Case 3: CMS and Version detected but out of support
-        if ($this->result["CMS"] !== null && $this->result["Supported"] === false) {
+        if ($this->result["CMS"] !== null && $upToDate === 0 && $unsupported > 0) {
             $testDetails = [
                 [
                     "placeholder" => "CMS_OUT_OF_SUPPORT",
                     "values" => [
                         "cms" => $this->result["CMS"],
-                        "version" => $this->result["Version"]
+                        "version" => implode(', ', array_keys($this->result["Versions"]))
                     ]
                 ]
             ];
@@ -372,8 +411,24 @@ class VersionScan
             $scoreType = 'critical';
         }
 
-        // Case 4: CMS found but can't detect version
-        if ($this->result["CMS"] !== null && $this->result["Version"] === null) {
+        // Case 4: One version up-to-date; others outdated
+        if ($this->result["CMS"] !== null && $upToDate === 1 && $outdated > 0) {
+            $testDetails = [
+                [
+                    "placeholder" => "CMS_MIGHT_UPTODATE",
+                    "values" => [
+                        "cms" => $this->result["CMS"],
+                        "version" => implode(', ', array_keys($this->result["Versions"]))
+                    ]
+                ]
+            ];
+
+            $score = 90;
+            $scoreType = 'warning';
+        }
+
+        // Case 5: CMS found but can't detect version
+        if ($this->result["CMS"] !== null && count($this->result["Versions"]) === 0) {
             $testDetails = [
                 [
                     "placeholder" => "CMS_CANT_DETECT_VERSION",
@@ -386,8 +441,7 @@ class VersionScan
             $scoreType = 'info';
         }
 
-
-        // Case 5: Can't detect CMS
+        // Case 6: Can't detect CMS
         if ($this->result["CMS"] === null) {
             $testDetails = [
                 [
