@@ -89,7 +89,7 @@ class Wordpress extends Releases
                 throw new \RuntimeException("Invalid WP version string " . $releaseMatch[1]);
             }
 
-            if (in_array($versionMatch, self::IGNORES)) {
+            if (in_array($versionMatch[1], self::IGNORES)) {
                 continue;
             }
 
