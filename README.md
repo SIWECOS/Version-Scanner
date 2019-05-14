@@ -4,14 +4,14 @@ This documentation describes the CMS Version scanner that has been developed as 
 
 # Startup using Docker
 
-`docker run -it --name siwecos-version-scanner -p 2015:2015 -v /PATH/TO/SIGNATURES:/scanner/storage/signatures siwecos/version-scanner`
+`docker run -it --name siwecos-version-scanner -p 2015:80 -v /PATH/TO/SIGNATURES:/scanner/storage/signatures siwecos/version-scanner`
 
 # Building a signature database
 
 The scanner uses an extensive list of md5 hashsums to detect the used CMS and it's version. Building that database will consume considerable resources!
 In order to build the database, execute the following command.
 
-`docker run -it --rm -v /PATH/TO/SIGNATURES:/scanner/storage/signatures --entrypoint "/usr/bin/php" siwecos/version-scanner -d memory_limit=8092M /scanner/artisan svs:updatedatabase`
+`docker run -it --rm -v /PATH/TO/SIGNATURES:/scanner/storage/signatures --entrypoint "/usr/local/bin/php" siwecos/version-scanner -d memory_limit=8092M /var/www/html/artisan svs:updatedatabase`
 
 Please note that containers local storage path /scanner/storage/signatures is bound to the local directory. Use this directory in subsequent calls to let the container use this pre-generated database file.
 
@@ -71,7 +71,7 @@ The parameter `url` is required:
 
 Direct scanning via CLI is also possible, use this command for it:
 
-`docker run -it --rm  -v /PATH/TO/SIGNATURES:/scanner/storage/signatures --entrypoint "/usr/bin/php" siwecos/version-scanner /scanner/artisan svs:version --website=https://example.com`
+`docker run -it --rm  -v /PATH/TO/SIGNATURES:/scanner/storage/signatures --entrypoint "/usr/local/bin/php" siwecos/version-scanner /var/www/html/artisan svs:version --website=https://example.com`
 
 ## HTTP-Output-Messages
 
