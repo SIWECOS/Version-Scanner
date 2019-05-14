@@ -1,22 +1,19 @@
+FROM siwecos/dockered-laravel:7.2
 
-FROM abiosoft/caddy:0.11.0-php-no-stats
+LABEL maintainer="Sascha Brendel <mail@lednerb.eu>"
 
-LABEL MAINTAINER="David Jardin <david.jardin@cms-garden.org>"
+# Settings [Further information: https://github.com/SIWECOS/dockered-laravel#env-options]
+ENV USE_SCHEDULER true
 
-RUN apk --update add bash php7-mcrypt php7-ctype php7-xml php7-simplexml php7-xmlwriter php7-fileinfo php7-sqlite3 php7-pdo_sqlite php7-simplexml supervisor redis && rm /var/cache/apk/*
+# Copy application
+COPY . .
+COPY .env.example .env
 
-RUN sed -i '/memory_limit = 128M/c\memory_limit = 256M' /etc/php7/php.ini
+RUN sed -i '/memory_limit = 128M/c\memory_limit = 256M' /usr/local/etc/php/php.ini
 
-COPY Docker/Caddyfile /etc/Caddyfile
-COPY Docker/supervisord.conf /etc/supervisord.conf
+# Install all PHP dependencies and change ownership of our applications
+RUN composer install --optimize-autoloader --no-dev --no-interaction \
+    && touch database/database.sqlite \
+    && chown -R www-data:www-data .
 
-COPY . /scanner
-COPY .env.prod /scanner/.env
-
-WORKDIR /scanner
-RUN composer install \
-    && chmod -R 777 /scanner/storage
-
-EXPOSE 2015
-
-ENTRYPOINT ["supervisord", "--nodaemon", "--configuration", "/etc/supervisord.conf"]
+EXPOSE 80
