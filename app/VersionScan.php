@@ -5,6 +5,7 @@ namespace App;
 
 use App\Webapps\Releases\Releases;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ClientException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -52,35 +53,65 @@ class VersionScan
      */
     public function scan(): array
     {
-        $fileExists = Storage::disk('signatures')->exists('candidates.json');
+        try {
+            $fileExists = Storage::disk('signatures')->exists('candidates.json');
 
-        // Check if candidates file exists
-        if (!$fileExists) {
-            throw new \RuntimeException('Could not find candidates.json in storage folder');
+            // Check if candidates file exists
+            if (!$fileExists) {
+                throw new \RuntimeException('Could not find candidates.json in storage folder');
+            }
+
+            // Read candidates file
+            $this->candidates = json_decode(Storage::disk('signatures')->get('candidates.json'), true);
+
+            if (!is_array($this->candidates) || !count($this->candidates)) {
+                throw new \RuntimeException('Invalid candidates file');
+            }
+
+            Log::info('=== Starting Scan Job for : ' . $this->website . ' ===');
+
+            // Detect used CMS
+            $this->detectCms();
+            $this->detectVersion();
+            $this->isSupported();
+
+            // Make callbacks
+            if (count($this->callbackUrls)) {
+                $this->notifyCallbacks();
+            }
+
+            Log::info('=== Finishing Scan Job for : ' . $this->website . ' ===');
+
+            return $this->result;
+        } catch (\Exception $e) {
+            if (!count($this->callbackUrls)) {
+                throw $e;
+            }
+
+            Log::info('=== Caught Scan Job Exception for : ' . $this->website . ' ===');
+
+            $report = [
+                'name'         => 'CMSVERSION',
+                'version'      => file_get_contents(base_path('VERSION')),
+                'hasError'     => true,
+                'errorMessage' => $e->getMessage(),
+                'score'        => 0
+            ];
+
+            foreach ($this->callbackUrls as $url) {
+                try {
+                    $this->client->post($url, [
+                        'http_errors' => false,
+                        'timeout'     => 60,
+                        'json'        => $report,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::warning('Could not send the error report to the following callback url: ' . $url);
+                }
+            }
+
+            return [];
         }
-
-        // Read candidates file
-        $this->candidates = json_decode(Storage::disk('signatures')->get('candidates.json'), true);
-
-        if (!is_array($this->candidates) || !count($this->candidates)) {
-            throw new \RuntimeException('Invalid candidates file');
-        }
-
-        Log::info('=== Starting Scan Job for : ' . $this->website . ' ===');
-
-        // Detect used CMS
-        $this->detectCms();
-        $this->detectVersion();
-        $this->isSupported();
-
-        // Make callbacks
-        if (count($this->callbackUrls)) {
-            $this->notifyCallbacks();
-        }
-
-        Log::info('=== Finishing Scan Job for : ' . $this->website . ' ===');
-
-        return $this->result;
     }
 
 
@@ -118,7 +149,7 @@ class VersionScan
                     }
 
                     $matchCount[$cms]++;
-                } catch (\Exception $e) {
+                } catch (ClientException $e) {
                     Log::info('=== File not found: ' . $this->website . $filename . ' ===');
 
                     continue;
@@ -196,7 +227,7 @@ class VersionScan
                 $targetHash = md5($body);
 
                 Log::info('File ' . $this->website . $filename . ' with hash ' . $targetHash . ' found');
-            } catch (\Exception $e) {
+            } catch (ClientException $e) {
                 Log::info('File ' . $this->website . $filename . ' not found, next file...');
 
                 continue;
@@ -273,7 +304,7 @@ class VersionScan
 
                             return;
                         }
-                    } catch (\Exception $e) {
+                    } catch (ClientException $e) {
                         continue;
                     }
                 }
