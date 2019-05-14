@@ -56,8 +56,8 @@ The parameter `url` is required:
       "scoreType": "info",
       "testDetails": [
         {
-          "placeholder": "CMS_UPTODATE",
-          "values": {
+          "translationStringId": "CMS_UPTODATE",
+          "placeholders": {
             "cms": "Joomla",
             "version": "3.9.4"
           }
@@ -75,10 +75,10 @@ Direct scanning via CLI is also possible, use this command for it:
 
 ## HTTP-Output-Messages
 
-| Placeholder                     | Message                                                                                                             |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| CANT_DETECT_CMS                 | CMS can't be detected.                                                                                              |
-| CANT_DETECT_VERSION             | The CMS has been detected, however the used version couldn't be determined                                          |
-| CMS_OUT_OF_SUPPORT              | The used CMS version is not under vendor support anymore - it's therefore outdated and will not receive any updates |
-| CMS_OUTDATED                    | The used CMS version is not the latest available version if the branch, go update                                   |
-| CMS_UPTODATE                    | The CMS is up-to-date                                                                                               |
+| Placeholder         | Message                                                                                                             |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| CANT_DETECT_CMS     | CMS can't be detected.                                                                                              |
+| CANT_DETECT_VERSION | The CMS has been detected, however the used version couldn't be determined                                          |
+| CMS_OUT_OF_SUPPORT  | The used CMS version is not under vendor support anymore - it's therefore outdated and will not receive any updates |
+| CMS_OUTDATED        | The used CMS version is not the latest available version if the branch, go update                                   |
+| CMS_UPTODATE        | The CMS is up-to-date                                                                                               |

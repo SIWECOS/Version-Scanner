@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare (strict_types = 1);
 
 namespace App;
 
@@ -45,11 +45,11 @@ class VersionScan
         ]);
     }
 
-   /**
-    * Execute the job.
-    *
-    * @return array
-    */
+    /**
+     * Execute the job.
+     *
+     * @return array
+     */
     public function scan(): array
     {
         $fileExists = Storage::disk('signatures')->exists('candidates.json');
@@ -66,7 +66,7 @@ class VersionScan
             throw new \RuntimeException('Invalid candidates file');
         }
 
-        Log::info('=== Starting Scan Job for : '. $this->website .' ===');
+        Log::info('=== Starting Scan Job for : ' . $this->website . ' ===');
 
         // Detect used CMS
         $this->detectCms();
@@ -78,7 +78,7 @@ class VersionScan
             $this->notifyCallbacks();
         }
 
-        Log::info('=== Finishing Scan Job for : '. $this->website .' ===');
+        Log::info('=== Finishing Scan Job for : ' . $this->website . ' ===');
 
         return $this->result;
     }
@@ -97,7 +97,7 @@ class VersionScan
             // Get the first 15 files per CMS
             $bestCandidates = array_splice($cmsData["identifier"], 0, 20);
 
-            Log::info('=== Scanning for CMS: '. $cms .' ===');
+            Log::info('=== Scanning for CMS: ' . $cms . ' ===');
 
             foreach ($bestCandidates as $filename => $hashInfo) {
                 // Remove lead slashes
@@ -111,7 +111,7 @@ class VersionScan
                         'timeout'     => 5
                     ]);
 
-                    Log::info('=== File found: '. $this->website . $filename .' ===');
+                    Log::info('=== File found: ' . $this->website . $filename . ' ===');
 
                     if (!isset($matchCount[$cms])) {
                         $matchCount[$cms] = 0;
@@ -119,7 +119,7 @@ class VersionScan
 
                     $matchCount[$cms]++;
                 } catch (\Exception $e) {
-                    Log::info('=== File not found: '. $this->website . $filename .' ===');
+                    Log::info('=== File not found: ' . $this->website . $filename . ' ===');
 
                     continue;
                 }
@@ -153,7 +153,7 @@ class VersionScan
             return;
         }
 
-        Log::info('Returning '. key($matchCount) .' as CMS with ' . $matches . ' matches');
+        Log::info('Returning ' . key($matchCount) . ' as CMS with ' . $matches . ' matches');
 
         $this->result["CMS"] = key($matchCount);
     }
@@ -190,7 +190,7 @@ class VersionScan
                     'timeout'     => 5
                 ]);
 
-                $body = (string) $response->getBody();
+                $body = (string)$response->getBody();
 
                 // Hash generation of the requested file from the website.
                 $targetHash = md5($body);
@@ -263,7 +263,7 @@ class VersionScan
                             'timeout'     => 5
                         ]);
 
-                        $body = (string) $response->getBody();
+                        $body = (string)$response->getBody();
 
                         $websiteFileHash = md5($body);
 
@@ -330,7 +330,7 @@ class VersionScan
             }
         }
 
-        throw new \RuntimeException("Could not find branch for CMS version " .$version);
+        throw new \RuntimeException("Could not find branch for CMS version " . $version);
     }
 
     /**
@@ -343,15 +343,16 @@ class VersionScan
         $testDetails = null;
 
         // Case 1: CMS and only 1 Version detected, up to date and supported
-        if (count($this->result["Versions"]) === 1
+        if (
+            count($this->result["Versions"]) === 1
             && $this->result["CMS"] !== null
             && $this->result["Versions"][key($this->result["Versions"])]["Supported"]
             && $this->result["Versions"][key($this->result["Versions"])]["IsLatest"]
         ) {
             $testDetails = [
                 [
-                    "placeholder" => "CMS_UPTODATE",
-                    "values" => [
+                    "translationStringId" => "CMS_UPTODATE",
+                    "placeholders" => [
                         "cms" => $this->result["CMS"],
                         "version" => key($this->result["Versions"])
                     ]
@@ -382,8 +383,8 @@ class VersionScan
         if ($this->result["CMS"] !== null && $upToDate === 0 && $outdated > 0) {
             $testDetails = [
                 [
-                    "placeholder" => "CMS_OUTDATED",
-                    "values" => [
+                    "translationStringId" => "CMS_OUTDATED",
+                    "placeholders" => [
                         "cms" => $this->result["CMS"],
                         "version" => implode(', ', array_keys($this->result["Versions"])),
                         "latest" => $this->result["Versions"][key($this->result["Versions"])]['Latest']
@@ -399,8 +400,8 @@ class VersionScan
         if ($this->result["CMS"] !== null && $upToDate === 0 && $unsupported > 0) {
             $testDetails = [
                 [
-                    "placeholder" => "CMS_OUT_OF_SUPPORT",
-                    "values" => [
+                    "translationStringId" => "CMS_OUT_OF_SUPPORT",
+                    "placeholders" => [
                         "cms" => $this->result["CMS"],
                         "version" => implode(', ', array_keys($this->result["Versions"]))
                     ]
@@ -415,8 +416,8 @@ class VersionScan
         if ($this->result["CMS"] !== null && $upToDate === 1 && $outdated > 0) {
             $testDetails = [
                 [
-                    "placeholder" => "CMS_MIGHT_UPTODATE",
-                    "values" => [
+                    "translationStringId" => "CMS_MIGHT_UPTODATE",
+                    "placeholders" => [
                         "cms" => $this->result["CMS"],
                         "version" => implode(', ', array_keys($this->result["Versions"]))
                     ]
@@ -431,8 +432,8 @@ class VersionScan
         if ($this->result["CMS"] !== null && count($this->result["Versions"]) === 0) {
             $testDetails = [
                 [
-                    "placeholder" => "CMS_CANT_DETECT_VERSION",
-                    "values" => [
+                    "translationStringId" => "CMS_CANT_DETECT_VERSION",
+                    "placeholders" => [
                         "cms" => $this->result["CMS"]
                     ]
                 ]
@@ -445,7 +446,7 @@ class VersionScan
         if ($this->result["CMS"] === null) {
             $testDetails = [
                 [
-                    "placeholder" => "CMS_CANT_DETECT_CMS"
+                    "translationStringId" => "CMS_CANT_DETECT_CMS"
                 ]
             ];
 
@@ -481,7 +482,7 @@ class VersionScan
                     'json'        => $report,
                 ]);
             } catch (\Exception $e) {
-                Log::warning('Could not send the report to the following callback url: '.$url);
+                Log::warning('Could not send the report to the following callback url: ' . $url);
             }
 
             Log::info('Finished callback for ' . $this->website);
