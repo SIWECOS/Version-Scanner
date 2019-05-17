@@ -94,7 +94,12 @@ class VersionScan
                 'name'         => 'CMSVERSION',
                 'version'      => file_get_contents(base_path('VERSION')),
                 'hasError'     => true,
-                'errorMessage' => $e->getMessage(),
+                'errorMessage' => [
+                    'translationStringId' => 'INTERNAL_ERROR_OCCURED',
+                    'placeholders' => [
+                        'EXCEPTION_MESSAGE' => $e->getMessage()
+                    ]
+                ],
                 'score'        => 0
             ];
 
