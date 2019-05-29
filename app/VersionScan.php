@@ -45,7 +45,8 @@ class VersionScan
         $this->client = new Client([
             'headers'         => [
                 'User-Agent' => $userAgent,
-            ]
+            ],
+            'verify' => false
         ]);
     }
 
