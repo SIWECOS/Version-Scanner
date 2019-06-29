@@ -72,7 +72,7 @@ class VersionScanJob implements ShouldQueue
                         'http_errors' => false,
                         'timeout' => 60,
                         'json' => [
-                            'name'         => 'CMSVersion',
+                            'name'         => 'VERSION',
                             'version'      => file_get_contents(base_path('VERSION')),
                             'hasError'     => true,
                             'errorMessage' => $exception->getMessage(),

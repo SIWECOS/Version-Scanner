@@ -1,5 +1,6 @@
 <?php
-declare (strict_types = 1);
+
+declare(strict_types=1);
 
 namespace App;
 
@@ -95,7 +96,7 @@ class VersionScan
             Log::info('=== Caught Scan Job Exception for : ' . $this->website . ' ===');
 
             $report = [
-                'name'         => 'CMSVERSION',
+                'name'         => 'VERSION',
                 'version'      => file_get_contents(base_path('VERSION')),
                 'hasError'     => true,
                 'errorMessage' => [
@@ -230,7 +231,7 @@ class VersionScan
                     'timeout'     => 5
                 ]);
 
-                $body = (string)$response->getBody();
+                $body = (string) $response->getBody();
 
                 // Hash generation of the requested file from the website.
                 $targetHash = md5($body);
@@ -303,7 +304,7 @@ class VersionScan
                             'timeout'     => 5
                         ]);
 
-                        $body = (string)$response->getBody();
+                        $body = (string) $response->getBody();
 
                         $websiteFileHash = md5($body);
 
@@ -494,14 +495,14 @@ class VersionScan
         }
 
         $report = [
-            'name'         => 'CMSVERSION',
+            'name'         => 'VERSION',
             'version'      => file_get_contents(base_path('VERSION')),
             'hasError'     => false,
             'errorMessage' => null,
             'score'        => $score,
             'tests'        => [
                 [
-                    "name" => "CMSVERSION",
+                    "name" => "VERSION",
                     "errorMessage" => null,
                     "hasError" => false,
                     "score" => $score,
@@ -539,17 +540,16 @@ class VersionScan
     public function punycodeUrl($url)
     {
         $parsed_url = parse_url($url);
-        $scheme = isset($parsed_url['scheme']) ? $parsed_url['scheme'].'://' : '';
+        $scheme = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : '';
         $host = isset($parsed_url['host']) ?
-            idn_to_ascii($parsed_url['host'], IDNA_NONTRANSITIONAL_TO_ASCII, INTL_IDNA_VARIANT_UTS46) :
-            '';
-        $port = isset($parsed_url['port']) ? ':'.$parsed_url['port'] : '';
+            idn_to_ascii($parsed_url['host'], IDNA_NONTRANSITIONAL_TO_ASCII, INTL_IDNA_VARIANT_UTS46) : '';
+        $port = isset($parsed_url['port']) ? ':' . $parsed_url['port'] : '';
         $user = isset($parsed_url['user']) ? $parsed_url['user'] : '';
-        $pass = isset($parsed_url['pass']) ? ':'.$parsed_url['pass'] : '';
+        $pass = isset($parsed_url['pass']) ? ':' . $parsed_url['pass'] : '';
         $pass = ($user || $pass) ? "$pass@" : '';
         $path = isset($parsed_url['path']) ? $parsed_url['path'] : '';
-        $query = isset($parsed_url['query']) ? '?'.$parsed_url['query'] : '';
+        $query = isset($parsed_url['query']) ? '?' . $parsed_url['query'] : '';
 
-        return "$scheme$user$pass$host$port$path$query";
+        return "$scheme $user $pass $host $port $path $query";
     }
 }

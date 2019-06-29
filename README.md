@@ -42,14 +42,14 @@ The parameter `url` is required:
 
 ```json
 {
-  "name": "CMSVersion",
+  "name": "VERSION",
   "version": "1.0.0",
   "hasError": false,
   "errorMessage": null,
   "score": 100,
   "tests": [
     {
-      "name": "CMSVERSION",
+      "name": "VERSION",
       "errorMessage": null,
       "hasError": false,
       "score": 100,
