@@ -550,6 +550,6 @@ class VersionScan
         $path = isset($parsed_url['path']) ? $parsed_url['path'] : '';
         $query = isset($parsed_url['query']) ? '?' . $parsed_url['query'] : '';
 
-        return "$scheme $user $pass $host $port $path $query";
+        return "$scheme$user$pass$host$port$path$query";
     }
 }
