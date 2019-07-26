@@ -366,7 +366,7 @@ class VersionScan
         $branches = $releaseClass->getLatest();
 
         foreach ($branches as $branch) {
-            if (stripos($version, $branch["branch"]) === 0) {
+            if (stripos($version, (string) $branch["branch"]) === 0) {
                 return $branch;
             }
         }
