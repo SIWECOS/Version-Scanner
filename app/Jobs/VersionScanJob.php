@@ -74,9 +74,16 @@ class VersionScanJob implements ShouldQueue
                         'json' => [
                             'name'         => 'VERSION',
                             'version'      => file_get_contents(base_path('VERSION')),
-                            'hasError'     => true,
-                            'errorMessage' => $exception->getMessage(),
-                            'score'        => 0
+                            'hasError'     => false,
+                            'errorMessage' => null,
+                            'score'        => 0,
+                            'tests'        => [
+                                [
+                                    "name" => "VERSION",
+                                    'errorMessage' => $exception->getMessage(),
+                                    "hasError" => true
+                                ]
+                            ]
                         ],
                     ]
                 );
