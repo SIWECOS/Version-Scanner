@@ -3,7 +3,7 @@
 
 CMS Version Scanner
 
-## VERSION
+## CMSVERSION
 
 ### Headline
 
