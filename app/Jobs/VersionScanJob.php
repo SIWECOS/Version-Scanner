@@ -4,11 +4,14 @@ namespace App\Jobs;
 
 use App\VersionScan;
 use App\Http\Requests\ScanStartRequest;
+use GuzzleHttp\Client;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
 
 class VersionScanJob implements ShouldQueue
 {
@@ -33,6 +36,9 @@ class VersionScanJob implements ShouldQueue
      */
     public function handle()
     {
+        Log::info('Starting Scan Job for ' . $this->request->get('url'));
+        Log::info('Queue jobs remaining ' . Queue::size($this->queue));
+
         // Set up scan from request
         $scan = new VersionScan(
             $this->request->get('url'),
@@ -43,5 +49,47 @@ class VersionScanJob implements ShouldQueue
 
         // Execute scan
         $scan->scan();
+    }
+
+    /**
+     * The job failed to process.
+     *
+     * @param  \Exception  $exception
+     * @return void
+     */
+    public function failed(\Exception $exception)
+    {
+        foreach ($this->request->get('callbackurls', []) as $url) {
+            Log::info(
+                'Making job-failed callback to ' . $url . ' with content ' . json_encode($exception->getMessage())
+            );
+
+            try {
+                $client = new Client;
+                $client->post(
+                    $url,
+                    [
+                        'http_errors' => false,
+                        'timeout' => 60,
+                        'json' => [
+                            'name'         => 'VERSION',
+                            'version'      => file_get_contents(base_path('VERSION')),
+                            'hasError'     => false,
+                            'errorMessage' => null,
+                            'score'        => 0,
+                            'tests'        => [
+                                [
+                                    "name" => "VERSION",
+                                    'errorMessage' => $exception->getMessage(),
+                                    "hasError" => true
+                                ]
+                            ]
+                        ],
+                    ]
+                );
+            } catch (\Exception $e) {
+                Log::warning('Could not send the failed report to the following callback url: ' . $url);
+            }
+        }
     }
 }

@@ -33,7 +33,11 @@ class Wordpress extends Releases
 
         // Parse branch information
         foreach ($releaseList as $release) {
-            preg_match('/(\d{1,2})\.(\d{1,2})\.(\d{1,2})/m', $release["version"], $matches);
+            preg_match('/(\d{1,2})\.(\d{1,2})\.?(\d{1,2})?/m', $release["version"], $matches);
+
+            if (!count($matches)) {
+                continue;
+            }
 
             $branchName = $matches[1] . "." . $matches[2];
 
@@ -89,7 +93,7 @@ class Wordpress extends Releases
                 throw new \RuntimeException("Invalid WP version string " . $releaseMatch[1]);
             }
 
-            if (in_array($versionMatch, self::IGNORES)) {
+            if (in_array($versionMatch[1], self::IGNORES)) {
                 continue;
             }
 

@@ -36,7 +36,7 @@ class Drupal extends Releases
 
             $branchName = (string) $release->version_major . "." . (string) $release->version_minor;
 
-            if ((string) $release->version_minor === "") {
+            if ((string) $release->version_minor === "" && (int) $release->version_major > 7) {
                 $branchName = (string) $release->version_major . ".0";
             }
 
