@@ -7,6 +7,8 @@ namespace App;
 use App\Webapps\Releases\Releases;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -105,7 +107,22 @@ class VersionScan
                         'EXCEPTION_MESSAGE' => $e->getMessage()
                     ]
                 ],
-                'score'        => 0
+                'score'        => 0,
+                'tests'        => [
+                    [
+                        "name" => "CMSVERSION",
+                        "errorMessage" => [
+                            'translationStringId' => 'INTERNAL_ERROR_OCCURED',
+                            'placeholders' => [
+                                'EXCEPTION_MESSAGE' => $e->getMessage()
+                            ]
+                        ],
+                        "hasError" => true,
+                        "score" => 0,
+                        "scoreType" => 'info',
+                        "testDetails" => []
+                    ]
+                ]
             ];
 
             foreach ($this->callbackUrls as $url) {
@@ -159,7 +176,7 @@ class VersionScan
                     }
 
                     $matchCount[$cms]++;
-                } catch (ClientException $e) {
+                } catch (ClientException | ConnectException | RequestException $e) {
                     Log::info('=== File not found: ' . $this->website . $filename . ' ===');
 
                     continue;
@@ -237,7 +254,7 @@ class VersionScan
                 $targetHash = md5($body);
 
                 Log::debug('File ' . $this->website . $filename . ' with hash ' . $targetHash . ' found');
-            } catch (ClientException $e) {
+            } catch (ClientException | ConnectException | RequestException $e) {
                 Log::debug('File ' . $this->website . $filename . ' not found, next file...');
 
                 continue;
@@ -314,7 +331,7 @@ class VersionScan
 
                             return;
                         }
-                    } catch (ClientException $e) {
+                    } catch (ClientException | ConnectException | RequestException $e) {
                         continue;
                     }
                 }
