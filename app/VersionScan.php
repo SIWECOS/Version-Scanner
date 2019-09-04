@@ -502,7 +502,7 @@ class VersionScan
             'score'        => $score,
             'tests'        => [
                 [
-                    "name" => "VERSION",
+                    "name" => "CMSVERSION",
                     "errorMessage" => null,
                     "hasError" => false,
                     "score" => $score,
