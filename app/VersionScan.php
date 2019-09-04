@@ -152,7 +152,7 @@ class VersionScan
                         'timeout'     => 5
                     ]);
 
-                    Log::info('=== File found: ' . $this->website . $filename . ' ===');
+                    Log::debug('=== File found: ' . $this->website . $filename . ' ===');
 
                     if (!isset($matchCount[$cms])) {
                         $matchCount[$cms] = 0;
@@ -221,7 +221,7 @@ class VersionScan
             $sourceHashes = $hashInfo['data'];
             $filename = ltrim($filename, '/');
 
-            Log::info('Fetching ' . $filename);
+            Log::debug('Fetching ' . $filename);
 
             // Sleep to not overwhelm the server
             usleep($this->delay * 1000);
@@ -236,16 +236,16 @@ class VersionScan
                 // Hash generation of the requested file from the website.
                 $targetHash = md5($body);
 
-                Log::info('File ' . $this->website . $filename . ' with hash ' . $targetHash . ' found');
+                Log::debug('File ' . $this->website . $filename . ' with hash ' . $targetHash . ' found');
             } catch (ClientException $e) {
-                Log::info('File ' . $this->website . $filename . ' not found, next file...');
+                Log::debug('File ' . $this->website . $filename . ' not found, next file...');
 
                 continue;
             }
 
             // First look up, if the candidates hash list contains the generated hash from the website.
             if (!isset($sourceHashes[$targetHash])) {
-                Log::info('Unknown hash of ' . $this->website . $filename . ', next file...');
+                Log::debug('Unknown hash of ' . $this->website . $filename . ', next file...');
 
                 continue;
             }
@@ -274,7 +274,7 @@ class VersionScan
             // Get the intersection of the current hash tree and the one before
             $possibleVersions = array_intersect($possibleVersions, $sourceHashes[$targetHash]);
 
-            Log::info('Remaining versions after this file: ' . count($possibleVersions));
+            Log::debug('Remaining versions after this file: ' . count($possibleVersions));
 
             // Check again, if the intersection resulted in one entry. No further searching required then.
             if (count($possibleVersions) === 1) {
