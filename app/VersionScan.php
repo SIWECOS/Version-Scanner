@@ -105,7 +105,22 @@ class VersionScan
                         'EXCEPTION_MESSAGE' => $e->getMessage()
                     ]
                 ],
-                'score'        => 0
+                'score'        => 0,
+                'tests'        => [
+                    [
+                        "name" => "CMSVERSION",
+                        "errorMessage" => [
+                            'translationStringId' => 'INTERNAL_ERROR_OCCURED',
+                            'placeholders' => [
+                                'EXCEPTION_MESSAGE' => $e->getMessage()
+                            ]
+                        ],
+                        "hasError" => true,
+                        "score" => 0,
+                        "scoreType" => 'info',
+                        "testDetails" => []
+                    ]
+                ]
             ];
 
             foreach ($this->callbackUrls as $url) {
