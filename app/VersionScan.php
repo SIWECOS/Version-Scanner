@@ -78,6 +78,7 @@ class VersionScan
             Log::info('=== Starting Scan Job for : ' . $this->website . ' ===');
 
             // Detect used CMS
+            $this->testBaseUrl();
             $this->detectCms();
             $this->detectVersion();
             $this->isSupported();
@@ -141,6 +142,21 @@ class VersionScan
         }
     }
 
+    /**
+     * Test if baseurl can be reached in general, if not escape early
+     *
+     * @return void
+     */
+    protected function testBaseUrl(): void
+    {
+        try {
+            $this->client->get($this->website, [
+                'timeout'     => 5
+            ]);
+        } catch (ClientException | ConnectException | RequestException $e) {
+            throw new \RuntimeException('Could not connect to site');
+        }
+    }
 
     /**
      * Detect the CMS used
