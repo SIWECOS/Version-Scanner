@@ -87,7 +87,7 @@ class Wordpress extends Releases
         $packages = [];
 
         foreach ($releaseMatches as $releaseMatch) {
-            preg_match('/.*\/wordpress-(\d{1,2}\.\d{1,2}\.\d{1,2})\.zip/s', $releaseMatch[1], $versionMatch);
+            preg_match('/.*\/wordpress-(\d{1,2}\.\d{1,2}(?:\.\d{1,2})?)\.zip/s', $releaseMatch[1], $versionMatch);
 
             if (!count($versionMatch)) {
                 throw new \RuntimeException("Invalid WP version string " . $releaseMatch[1]);
@@ -95,6 +95,11 @@ class Wordpress extends Releases
 
             if (in_array($versionMatch[1], self::IGNORES)) {
                 continue;
+            }
+
+            // Count version string parts and append .0 if required
+            if (explode(".", $versionMatch[1]) === 2) {
+                $versionMatch[1] .= ".0";
             }
 
             $packages[$versionMatch[1]] = [
