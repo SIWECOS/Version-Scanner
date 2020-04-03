@@ -98,7 +98,7 @@ class Wordpress extends Releases
             }
 
             // Count version string parts and append .0 if required
-            if (explode(".", $versionMatch[1]) === 2) {
+            if (count(explode(".", $versionMatch[1])) === 2) {
                 $versionMatch[1] .= ".0";
             }
 
