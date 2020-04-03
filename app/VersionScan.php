@@ -7,6 +7,8 @@ namespace App;
 use App\Webapps\Releases\Releases;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -76,6 +78,7 @@ class VersionScan
             Log::info('=== Starting Scan Job for : ' . $this->website . ' ===');
 
             // Detect used CMS
+            $this->testBaseUrl();
             $this->detectCms();
             $this->detectVersion();
             $this->isSupported();
@@ -105,7 +108,22 @@ class VersionScan
                         'EXCEPTION_MESSAGE' => $e->getMessage()
                     ]
                 ],
-                'score'        => 0
+                'score'        => 0,
+                'tests'        => [
+                    [
+                        "name" => "CMSVERSION",
+                        "errorMessage" => [
+                            'translationStringId' => 'INTERNAL_ERROR_OCCURED',
+                            'placeholders' => [
+                                'EXCEPTION_MESSAGE' => $e->getMessage()
+                            ]
+                        ],
+                        "hasError" => true,
+                        "score" => 0,
+                        "scoreType" => 'info',
+                        "testDetails" => []
+                    ]
+                ]
             ];
 
             foreach ($this->callbackUrls as $url) {
@@ -124,6 +142,21 @@ class VersionScan
         }
     }
 
+    /**
+     * Test if baseurl can be reached in general, if not escape early
+     *
+     * @return void
+     */
+    protected function testBaseUrl(): void
+    {
+        try {
+            $this->client->get($this->website, [
+                'timeout'     => 5
+            ]);
+        } catch (ClientException | ConnectException | RequestException $e) {
+            throw new \RuntimeException('Could not connect to site');
+        }
+    }
 
     /**
      * Detect the CMS used
@@ -152,14 +185,14 @@ class VersionScan
                         'timeout'     => 5
                     ]);
 
-                    Log::info('=== File found: ' . $this->website . $filename . ' ===');
+                    Log::debug('=== File found: ' . $this->website . $filename . ' ===');
 
                     if (!isset($matchCount[$cms])) {
                         $matchCount[$cms] = 0;
                     }
 
                     $matchCount[$cms]++;
-                } catch (ClientException $e) {
+                } catch (ClientException | ConnectException | RequestException $e) {
                     Log::info('=== File not found: ' . $this->website . $filename . ' ===');
 
                     continue;
@@ -221,7 +254,7 @@ class VersionScan
             $sourceHashes = $hashInfo['data'];
             $filename = ltrim($filename, '/');
 
-            Log::info('Fetching ' . $filename);
+            Log::debug('Fetching ' . $filename);
 
             // Sleep to not overwhelm the server
             usleep($this->delay * 1000);
@@ -236,16 +269,16 @@ class VersionScan
                 // Hash generation of the requested file from the website.
                 $targetHash = md5($body);
 
-                Log::info('File ' . $this->website . $filename . ' with hash ' . $targetHash . ' found');
-            } catch (ClientException $e) {
-                Log::info('File ' . $this->website . $filename . ' not found, next file...');
+                Log::debug('File ' . $this->website . $filename . ' with hash ' . $targetHash . ' found');
+            } catch (ClientException | ConnectException | RequestException $e) {
+                Log::debug('File ' . $this->website . $filename . ' not found, next file...');
 
                 continue;
             }
 
             // First look up, if the candidates hash list contains the generated hash from the website.
             if (!isset($sourceHashes[$targetHash])) {
-                Log::info('Unknown hash of ' . $this->website . $filename . ', next file...');
+                Log::debug('Unknown hash of ' . $this->website . $filename . ', next file...');
 
                 continue;
             }
@@ -274,7 +307,7 @@ class VersionScan
             // Get the intersection of the current hash tree and the one before
             $possibleVersions = array_intersect($possibleVersions, $sourceHashes[$targetHash]);
 
-            Log::info('Remaining versions after this file: ' . count($possibleVersions));
+            Log::debug('Remaining versions after this file: ' . count($possibleVersions));
 
             // Check again, if the intersection resulted in one entry. No further searching required then.
             if (count($possibleVersions) === 1) {
@@ -314,7 +347,7 @@ class VersionScan
 
                             return;
                         }
-                    } catch (ClientException $e) {
+                    } catch (ClientException | ConnectException | RequestException $e) {
                         continue;
                     }
                 }
@@ -502,7 +535,7 @@ class VersionScan
             'score'        => $score,
             'tests'        => [
                 [
-                    "name" => "VERSION",
+                    "name" => "CMSVERSION",
                     "errorMessage" => null,
                     "hasError" => false,
                     "score" => $score,
