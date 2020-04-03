@@ -79,7 +79,7 @@ class Typo3 extends Releases
                 }
 
                 $packages[$version] = [
-                    "url" => $versionData["url"]["tar"],
+                    "url" => "https://get.typo3.org" . $versionData["url"]["tar"],
                     "filename" => $version . ".tgz"
                 ];
             }
