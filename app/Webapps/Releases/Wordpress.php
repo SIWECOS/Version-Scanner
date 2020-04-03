@@ -77,7 +77,7 @@ class Wordpress extends Releases
         $releaseMarkup = (string) $apiResponse->getBody();
 
         preg_match_all(
-            '/<a href=\"(https:\/\/wordpress\.org\/wordpress-\d{1,2}\.\d{1,2}\.\d{1,2}\.zip)/s',
+            '/<a href=\"(https:\/\/wordpress\.org\/wordpress-\d{1,2}\.\d{1,2}(?:\.\d{1,2})?\.zip)/s',
             $releaseMarkup,
             $releaseMatches,
             PREG_SET_ORDER,
