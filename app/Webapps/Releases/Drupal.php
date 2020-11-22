@@ -49,9 +49,14 @@ class Drupal extends Releases
             $supported = false;
 
             // Hardcode supported version date for 7
-            if ((int) $release->version_major === 7
-                && Carbon::now()->diff(Carbon::create(2021, 11, 01))->invert == 0) {
-                $supported = true;
+            if ($release->security) {
+                foreach ($release->security->attributes() as $attributeName => $attributeValue) {
+                    if ($attributeName === "covered" && (int) $attributeValue === 1) {
+                        $supported = true;
+
+                        break;
+                    }
+                }
             }
 
             if ($release->terms->count() == 0) {
@@ -65,17 +70,6 @@ class Drupal extends Releases
                 "minor" => (int) $release->version_minor,
                 "major" => (int) $release->version_major
             ];
-        }
-
-        // Determine support for Drupal >= 8
-        foreach ($versions as $branchName => $version) {
-            // Determine support for 8 and upwards
-            if ((int) $version["major"] >= 8) {
-                // Drupal >= 8 supports the latest and previous version
-                if (empty($versions[$version["major"] . "." . ($version["minor"] + 1)])) {
-                    $versions[$branchName]["supported"] = true;
-                }
-            }
         }
 
         return $versions;
