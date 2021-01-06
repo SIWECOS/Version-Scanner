@@ -80,7 +80,12 @@ class VersionScanJob implements ShouldQueue
                             'tests'        => [
                                 [
                                     "name" => "VERSION",
-                                    'errorMessage' => $exception->getMessage(),
+                                    'errorMessage' => [
+                                        'translationStringId' => 'INTERNAL_ERROR_OCCURED',
+                                        'placeholders' => [
+                                            'EXCEPTION_MESSAGE' => $exception->getMessage()
+                                        ]
+                                    ],
                                     "hasError" => true
                                 ]
                             ]
