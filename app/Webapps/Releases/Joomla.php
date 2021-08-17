@@ -82,7 +82,10 @@ class Joomla extends Releases
         $packages = [];
 
         foreach ($releaseList as $release) {
-            if ($release->branch === "Install from Web" || $release->branch === "Weblinks" || strpos($release->branch, "Joomla! 1.5 - ") !== false) {
+            if ($release->branch === "Install from Web"
+                || $release->branch === "Weblinks"
+                || strpos($release->branch, "Joomla! 1.5 - ") !== false
+                || strpos($release->branch, "Joomla! 4 - ") !== false) {
                 continue;
             }
 
