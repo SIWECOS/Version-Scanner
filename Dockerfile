@@ -17,7 +17,7 @@ ADD https://siwecos.github.io/Version-Scanner/signatures/signatures.json ./stora
 
 
 # Install all PHP dependencies and change ownership of our applications
-RUN composer self-update --1 \
+RUN composer self-update 1.10.22 \
     && composer install --optimize-autoloader --no-dev --no-interaction \
     && touch database/database.sqlite \
     && chown -R www-data:www-data .
