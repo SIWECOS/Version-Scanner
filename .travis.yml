@@ -10,7 +10,7 @@ cache:
 dist: trusty
 
 before_script:
-  - composer self-update
+  - composer self-update --1
   - composer install --no-interaction
 
 script:
