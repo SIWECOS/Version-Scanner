@@ -168,8 +168,8 @@ class VersionScan
         $matchCount = [];
 
         foreach ($this->candidates as $cms => $cmsData) {
-            // Get the first 15 files per CMS
-            $bestCandidates = array_splice($cmsData["identifier"], 0, 20);
+            // Get the first 10 files per CMS
+            $bestCandidates = array_splice($cmsData["identifier"], 0, 10);
 
             Log::info('=== Scanning for CMS: ' . $cms . ' ===');
 
@@ -207,7 +207,7 @@ class VersionScan
         // Check for an edge case: if multiple CMS have the full match count, it's most likely because
         // the server returns 200 status code for 404 pages
         if (count(array_filter($matchCount, function ($count) {
-            return ($count === 20);
+            return ($count === 10);
         })) > 1) {
             Log::info('Returning no CMS because server is misconfigured');
 
