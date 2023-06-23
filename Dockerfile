@@ -5,7 +5,7 @@ LABEL maintainer="Sascha Brendel <mail@lednerb.eu>"
 # Settings [Further information: https://github.com/SIWECOS/dockered-laravel#env-options]
 ENV USE_SCHEDULER true
 
-RUN echo 'memory_limit = 1024M' >> /usr/local/etc/php/conf.d/docker-php-memlimit.ini;
+RUN echo 'memory_limit = 4096M' >> /usr/local/etc/php/conf.d/docker-php-memlimit.ini;
 
 # Copy application
 COPY . .
