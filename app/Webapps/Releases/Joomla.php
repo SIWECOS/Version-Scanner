@@ -117,6 +117,10 @@ class Joomla extends Releases
         $baseUrl = 'https://downloads.joomla.org/cms';
 
         switch ($release->branch) {
+            case "Joomla! 5":
+                $major = 5;
+                break;
+
             case "Joomla! 4":
                 $major = 4;
                 break;
