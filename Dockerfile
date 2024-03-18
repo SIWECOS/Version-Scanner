@@ -12,9 +12,8 @@ COPY . .
 COPY .env.example .env
 
 # Add required base files
-ADD https://siwecos.github.io/Version-Scanner/signatures/candidates.json ./storage/signatures/candidates.json
-ADD https://siwecos.github.io/Version-Scanner/signatures/signatures.json ./storage/signatures/signatures.json
-
+COPY ./storage/signatures/candidates.json ./storage/signatures/candidates.json
+COPY ./storage/signatures/signatures.json ./storage/signatures/signatures.json
 
 # Install all PHP dependencies and change ownership of our applications
 RUN composer self-update 1.10.22 \

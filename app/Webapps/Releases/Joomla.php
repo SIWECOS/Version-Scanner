@@ -43,8 +43,8 @@ class Joomla extends Releases
             $versions[$branchKey]["branch"] = str_ireplace("Joomla! ", "", $versions[$branchKey]["branch"]);
 
             switch ($versionBranch["branch"]) {
-                case "Joomla! 3":
                 case "Joomla! 4":
+                case "Joomla! 5":
                     $versions[$branchKey]["supported"] = true;
                     break;
 
